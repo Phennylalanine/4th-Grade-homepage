@@ -43,10 +43,17 @@ Papa.parse("questions.csv", {
   download: true,
   header: true,
   complete: function(results) {
+    console.log("CSV Results:", results); // 👈 Add this
     questions = results.data.filter(q => q.jp && q.en);
+    console.log("Parsed Questions:", questions); // 👈 Add this
     isQuestionsLoaded = true;
     if (loadingMessage) loadingMessage.style.display = "none";
+  },
+  error: function(err) {
+    console.error("CSV load error:", err); // 👈 Log any errors
   }
+});
+
 });
 
 function getRandomQuestion() {
