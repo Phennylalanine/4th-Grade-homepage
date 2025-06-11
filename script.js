@@ -56,6 +56,19 @@ function loadNextQuestion() {
 
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
+  enText.textContent = question.en; // Show the English word
+
+  answerInput.value = "";
+  answerInput.disabled = false;
+  answerInput.focus(); // Autofocus here
+  nextBtn.disabled = false;
+  feedback.textContent = "";
+
+  speak(question.en);
+}
+
+  const question = questions[currentQuestionIndex];
+  jpText.textContent = question.jp;
   enText.textContent = ""; // Hide the English word at first
 
   answerInput.value = "";
