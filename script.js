@@ -1,235 +1,234 @@
+// script.js
+
+// Confetti lib (tiny, vanilla) - adapted from https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js
+// For simplicity, here is a minimal confetti function:
+function confettiBurst() {
+  const duration = 2 * 1000;
+  const end = Date.now() + duration;
+
+  (function frame() {
+    confetti({
+      particleCount: 5,
+      startVelocity: 30,
+      spread: 360,
+      ticks: 60,
+      origin: { x: Math.random(), y: Math.random() * 0.6 }
+    });
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
+}
+
+// Load canvas-confetti from CDN dynamically
+function loadConfettiLib() {
+  return new Promise((res) => {
+    if (window.confetti) return res();
+    const script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
+    script.onload = () => res();
+    document.body.appendChild(script);
+  });
+}
+
+const jpQuestionEl = document.getElementById("jpQuestion");
+const enQuestionEl = document.getElementById("enQuestion");
+const answerInput = document.getElementById("answerInput");
+const nextBtn = document.getElementById("nextBtn");
+const messageEl = document.getElementById("message");
+const scoreEl = document.getElementById("score");
+const comboEl = document.getElementById("combo");
+const levelEl = document.getElementById("level");
+const xpBar = document.getElementById("xpBar");
+const xpBarContainer = document.getElementById("xpBarContainer");
+
+const STORAGE_LEVEL_KEY = "months_level";
+const STORAGE_XP_KEY = "months_xp";
+
 let questions = [];
-let currentQuestion = null;
+let currentIndex = 0;
 let score = 0;
-let streak = 0;
+let combo = 0;
 let xp = 0;
 let level = 1;
-let userInteracted = false;
-let missedQuestions = [];
-let questionCount = 0;
-let isQuestionsLoaded = false;
+let answered = false;
 
-// Start screen elements
-const startScreen = document.getElementById("startScreen");
-const startBtn = document.getElementById("startBtn");
-const loadingMessage = document.getElementById("loadingMessage");
+// XP needed for next level
+function xpToNextLevel(lv) {
+  return (lv + 1) * 3;
+}
 
-// DOM elements
-const quizContainer = document.getElementById("quizContainer");
-const questionDisplay = document.getElementById("question");
-const answerInput = document.getElementById("answerInput");
-const feedback = document.getElementById("feedback");
-const nextBtn = document.getElementById("nextBtn");
-const scoreDisplay = document.getElementById("score");
-const streakDisplay = document.getElementById("streak");
-const xpDisplay = document.getElementById("xp");
-const levelDisplay = document.getElementById("level");
-const xpProgress = document.getElementById("xpProgress");
-const xpMultiplierAnim = document.getElementById("xpMultiplierAnim");
-const reviewBtn = document.getElementById("reviewBtn");
+// Load saved data or initialize
+function loadData() {
+  level = parseInt(localStorage.getItem(STORAGE_LEVEL_KEY)) || 1;
+  xp = parseInt(localStorage.getItem(STORAGE_XP_KEY)) || 0;
+  updateLevelDisplay();
+  updateXPBar();
+}
 
-// Start the game on button click
-startBtn.addEventListener("click", () => {
-  if (!isQuestionsLoaded) {
-    alert("Questions are still loading. Please wait a moment.");
+// Save data
+function saveData() {
+  localStorage.setItem(STORAGE_LEVEL_KEY, level);
+  localStorage.setItem(STORAGE_XP_KEY, xp);
+}
+
+// Show question
+function showQuestion() {
+  if (currentIndex >= questions.length) {
+    // End of quiz
+    jpQuestionEl.textContent = "🎉 You've completed all questions!";
+    enQuestionEl.textContent = "";
+    answerInput.disabled = true;
+    nextBtn.disabled = true;
     return;
   }
-  userInteracted = true;
-  startScreen.style.display = "none";
-  quizContainer.style.display = "flex"; // <-- Show quiz container
+  const q = questions[currentIndex];
+  jpQuestionEl.textContent = q.jp;
+  enQuestionEl.textContent = q.en;
+  answerInput.value = "";
+  answerInput.disabled = false;
+  answerInput.focus();
+  nextBtn.disabled = true;
+  messageEl.textContent = "";
+  answered = false;
+}
+
+function showXPFloat(multiplier) {
+  const floatEl = document.createElement("div");
+  floatEl.textContent = `+${multiplier} XP!`;
+  floatEl.classList.add("xp-float");
+  // Random position near center bottom
+  floatEl.style.left = (window.innerWidth / 2 + (Math.random() * 100 - 50)) + "px";
+  floatEl.style.top = (window.innerHeight - 100 + (Math.random() * 30 - 15)) + "px";
+  document.body.appendChild(floatEl);
+  setTimeout(() => {
+    floatEl.remove();
+  }, 1200);
+}
+
+// Calculate XP multiplier based on combo count
+function getXPMultiplier(cmb) {
+  if (cmb < 15) return 1;
+  if (cmb >= 15 && cmb < 20) return 2;
+  if (cmb >= 20 && cmb < 25) return 3;
+  if (cmb >= 25 && cmb < 30) return 4;
+  // 30+ combo quadruple XP and above:
+  if (cmb >= 30) {
+    // For every 5 combo after 25, increase multiplier by 1
+    return 4 + Math.floor((cmb - 25) / 5);
+  }
+  return 1;
+}
+
+function updateLevelDisplay() {
+  levelEl.textContent = level;
+}
+
+function updateXPBar() {
+  const needed = xpToNextLevel(level);
+  const percent = Math.min(100, (xp / needed) * 100);
+  xpBar.style.width = percent + "%";
+}
+
+// Handle answer submission
+function submitAnswer() {
+  if (answered) return;
+  const userAnswer = answerInput.value.trim();
+  const correctAnswer = questions[currentIndex].en;
+
+  if (userAnswer === "") return; // do nothing on empty
+
+  if (userAnswer === correctAnswer) {
+    // Correct
+    score++;
+    combo++;
+    let multiplier = getXPMultiplier(combo);
+
+    // Points and combo +1, XP + multiplier
+    let xpGain = multiplier;
+    xp += xpGain;
+
+    // Save data to localStorage
+    // Check level up
+    const needed = xpToNextLevel(level);
+    if (xp >= needed) {
+      xp -= needed;
+      level++;
+      updateLevelDisplay();
+      loadConfettiLib().then(() => {
+        confetti();
+      });
+    }
+    updateXPBar();
+    saveData();
+
+    scoreEl.textContent = score;
+    comboEl.textContent = combo;
+
+    if (multiplier > 1) {
+      showXPFloat(multiplier);
+    }
+
+    messageEl.style.color = "green";
+    messageEl.textContent = "Correct!";
+  } else {
+    // Incorrect, show error message with case difference
+    combo = 0; // reset combo on fail
+    comboEl.textContent = combo;
+    messageEl.style.color = "red";
+    messageEl.innerHTML = `Wrong!<br>Your input: <b>${userAnswer}</b><br>Correct input: <b>${correctAnswer}</b>`;
+  }
+  answered = true;
+  answerInput.disabled = true;
+  nextBtn.disabled = false;
+  nextBtn.focus();
+}
+
+// Load CSV and parse
+function loadCSV() {
+  return fetch("questions.csv")
+    .then(res => {
+      if (!res.ok) throw new Error("Could not load CSV");
+      return res.text();
+    })
+    .then(text => {
+      // Parse CSV: jp,en
+      const lines = text.trim().split("\n");
+      questions = lines.map(line => {
+        const [jp, en] = line.split(",");
+        return { jp: jp.trim(), en: en.trim() };
+      });
+    });
+}
+
+nextBtn.addEventListener("click", () => {
+  if (!answered) return;
+  currentIndex++;
   showQuestion();
 });
 
-// Use correct path for GitHub Pages.
-// If your repo is at https://phennylalanine.github.io/lever/, use './questions.csv'
-Papa.parse("questions.txt", {
-  download: true,
-  header: true,
-  complete: function(results) {
-    questions = results.data.filter(q => q.jp && q.en);
-    isQuestionsLoaded = true;
-    if (loadingMessage) loadingMessage.style.display = "none";
-  },
-  error: function(err) {
-    console.error("CSV load error:", err);
-    if (loadingMessage) loadingMessage.textContent = "Failed to load questions.";
-  }
-});
-
-function getRandomQuestion() {
-  return questions[Math.floor(Math.random() * questions.length)];
-}
-
-function speak(text) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  speechSynthesis.speak(utterance);
-}
-
-function showQuestion() {
-  if (!questions.length) return;
-
-  currentQuestion = getRandomQuestion();
-  questionDisplay.textContent = `${currentQuestion.en} ${currentQuestion.jp}`;
-  answerInput.value = "";
-  answerInput.disabled = false;
-  feedback.innerHTML = "";
-  nextBtn.style.display = "none";
-  answerInput.style.display = "block";
-  answerInput.focus();
-  questionCount++;
-
-  if (questionCount >= 5 && missedQuestions.length > 0) {
-    reviewBtn.style.display = "inline-block";
-  }
-
-  if (userInteracted && currentQuestion.en) {
-    speak(currentQuestion.en);
-  }
-}
-
-function updateScoreAndStreakDisplay() {
-  scoreDisplay.textContent = "Score: " + score;
-  streakDisplay.textContent = "コンボ: " + streak;
-}
-
-function updateXPDisplay() {
-  xpDisplay.textContent = "XP: " + xp;
-  levelDisplay.textContent = "Lv: " + level;
-
-  const baseXP = 1;
-  const xpNeeded = (level ** 2) * baseXP;
-  const progressPercent = Math.min((xp / xpNeeded) * 100, 100);
-  xpProgress.style.width = progressPercent + "%";
-}
-
-function saveProgress() {
-  localStorage.setItem("events_xp", xp);
-  localStorage.setItem("events_level", level);
-}
-
-function loadProgress() {
-  const savedXP = localStorage.getItem("events_xp");
-  const savedLevel = localStorage.getItem("events_level");
-  if (savedXP !== null) xp = parseInt(savedXP, 10);
-  if (savedLevel !== null) level = parseInt(savedLevel, 10);
-  updateScoreAndStreakDisplay();
-  updateXPDisplay();
-}
-
-function launchConfetti() {
-  confetti({
-    particleCount: 150,
-    spread: 70,
-    origin: { y: 0.6 }
-  });
-}
-
-function checkLevelUp() {
-  const baseXP = 1;
-  const xpNeeded = (level ** 2) * baseXP;
-
-  if (xp >= xpNeeded) {
-    level++;
-    xp -= xpNeeded;
-    feedback.innerHTML += `<br/>🎉 レベルアップ！Now Level ${level}`;
-    launchConfetti();
-    saveProgress();
-    updateXPDisplay();
-  }
-}
-
-function showXpMultiplierAnimation(multiplier) {
-  xpMultiplierAnim.textContent = `+${multiplier}x XP!`;
-  xpMultiplierAnim.style.opacity = "1";
-  xpMultiplierAnim.style.animation = "floatUpFade 1.5s forwards";
-
-  xpMultiplierAnim.addEventListener("animationend", () => {
-    xpMultiplierAnim.style.opacity = "0";
-    xpMultiplierAnim.style.animation = "";
-  }, { once: true });
-}
-
-function showFeedback(correct, expected, userInput) {
-  if (correct) {
-    streak++;
-    score++;
-
-    const xpMultiplier = 1 + Math.floor(streak / 15);
-    const xpGained = xpMultiplier;
-    xp += xpGained;
-
-    feedback.innerHTML = `✅ 正解！Good job!<br/>XP +${xpGained}`;
-
-    if (xpMultiplier > 1) {
-      showXpMultiplierAnimation(xpMultiplier);
-    }
-
-    checkLevelUp();
-    saveProgress();
-    updateScoreAndStreakDisplay();
-    updateXPDisplay();
-  } else {
-    let mismatchIndex = [...expected].findIndex((char, i) => char !== userInput[i]);
-    if (mismatchIndex === -1 && userInput.length > expected.length) {
-      mismatchIndex = expected.length;
-    }
-
-    const correctPart = expected.slice(0, mismatchIndex);
-    const wrongPart = expected.slice(mismatchIndex);
-
-    feedback.innerHTML = `
-      ❌ 間違いがあります<br/>
-      <strong>正解:</strong> ${expected}<br/>
-      <strong>あなたの答え:</strong> ${userInput}<br/>
-      <strong>ここが間違い:</strong> ${correctPart}<span style="color:red">${wrongPart}</span>
-    `;
-
-    missedQuestions.push({ expected, userInput });
-    streak = 0;
-    updateScoreAndStreakDisplay();
-  }
-
-  answerInput.disabled = true;
-  nextBtn.style.display = "inline-block";
-}
-
-answerInput.addEventListener("keydown", function(e) {
+answerInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
-    if (answerInput.disabled) {
-      showQuestion();
+    e.preventDefault();
+    if (!answered) {
+      submitAnswer();
     } else {
-      const userAnswer = answerInput.value.trim();
-      const expected = currentQuestion.en.trim();
-      const isCorrect = userAnswer === expected;
-      showFeedback(isCorrect, expected, userAnswer);
+      if (!nextBtn.disabled) {
+        currentIndex++;
+        showQuestion();
+      }
     }
   }
 });
 
-nextBtn.addEventListener("click", showQuestion);
-
-const speakBtn = document.getElementById("speakBtn");
-if (speakBtn) {
-  speakBtn.addEventListener("click", function() {
-    if (currentQuestion && currentQuestion.en) {
-      speak(currentQuestion.en);
-    }
-  });
-}
-
-reviewBtn.addEventListener("click", function () {
-  let reviewText = "<h3>復習：間違えた単語</h3><ul>";
-  missedQuestions.forEach(q => {
-    reviewText += `<li><strong>正解:</strong> ${q.expected} <br/><strong>あなたの答え:</strong> ${q.userInput}</li>`;
-  });
-  reviewText += "</ul>";
-
-  questionDisplay.innerHTML = reviewText;
-  answerInput.style.display = "none";
-  nextBtn.style.display = "none";
-  reviewBtn.style.display = "none";
-  feedback.innerHTML = "";
+window.addEventListener("DOMContentLoaded", () => {
+  loadData();
+  loadCSV()
+    .then(() => {
+      showQuestion();
+    })
+    .catch(err => {
+      jpQuestionEl.textContent = "Error loading questions.csv";
+      console.error(err);
+    });
 });
-
-loadProgress();
