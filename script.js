@@ -69,10 +69,10 @@ function loadNextQuestion() {
 
 function checkAnswer() {
   const userAnswer = answerInput.value.trim().toLowerCase();
-  const correctAnswer = questions[currentQuestionIndex].en;
+  const correctAnswer = questions[currentQuestionIndex].en.toLowerCase();
 
   if (userAnswer === correctAnswer) {
-    feedback.textContent = "✔️ Correct!";
+    feedback.innerHTML = "✔️ <strong>Correct!</strong>";
     feedback.style.color = "green";
     combo++;
     score += 10 + Math.min(combo, maxComboForBonus);
@@ -85,7 +85,7 @@ function checkAnswer() {
     currentQuestionIndex++;
     setTimeout(loadNextQuestion, 1000);
   } else {
-    feedback.textContent = `✖️ Wrong! Try again.`;
+    feedback.innerHTML = `✖️ <strong>Wrong!</strong> <br> Correct answer: <em>${questions[currentQuestionIndex].en}</em>`;
     feedback.style.color = "red";
     combo = 0;
     updateStats();
@@ -94,6 +94,7 @@ function checkAnswer() {
   answerInput.disabled = true;
   nextBtn.disabled = true;
 }
+
 
 function updateStats() {
   pointsEl.textContent = score;
