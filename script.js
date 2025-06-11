@@ -15,6 +15,7 @@ const startBtn = document.getElementById("startBtn");
 const loadingMessage = document.getElementById("loadingMessage");
 
 // DOM elements
+const quizContainer = document.getElementById("quizContainer");
 const questionDisplay = document.getElementById("question");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
@@ -35,25 +36,24 @@ startBtn.addEventListener("click", () => {
   }
   userInteracted = true;
   startScreen.style.display = "none";
+  quizContainer.style.display = "flex"; // <-- Show quiz container
   showQuestion();
 });
 
-// Load CSV with PapaParse
-Papa.parse("questions.csv", {
+// Use correct path for GitHub Pages.
+// If your repo is at https://phennylalanine.github.io/lever/, use './questions.csv'
+Papa.parse("./questions.csv", {
   download: true,
   header: true,
   complete: function(results) {
-    console.log("CSV Results:", results); // 👈 Add this
     questions = results.data.filter(q => q.jp && q.en);
-    console.log("Parsed Questions:", questions); // 👈 Add this
     isQuestionsLoaded = true;
     if (loadingMessage) loadingMessage.style.display = "none";
   },
   error: function(err) {
-    console.error("CSV load error:", err); // 👈 Log any errors
+    console.error("CSV load error:", err);
+    if (loadingMessage) loadingMessage.textContent = "Failed to load questions.";
   }
-});
-
 });
 
 function getRandomQuestion() {
