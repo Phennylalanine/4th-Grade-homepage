@@ -4,6 +4,8 @@ let combo = 0;
 let level = 1;
 let xp = 0;
 let questions = [];
+let answered = false;
+
 const maxComboForBonus = 5;
 
 const jpText = document.getElementById("jpText");
@@ -11,7 +13,7 @@ const enText = document.getElementById("enText");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
-const tryAgainBtn = document.getElementById("tryAgainBtn"); // new button
+const tryAgainBtn = document.getElementById("tryAgainBtn");
 const pointsEl = document.getElementById("points");
 const comboEl = document.getElementById("combo");
 const levelEl = document.getElementById("level");
@@ -49,7 +51,7 @@ function parseCSV(data) {
     .split("\n")
     .map((line) => {
       const [jp, en] = line.split(",");
-      return { jp: jp.trim(), en: en.trim() }; // keep original case here, comparison is done with toLowerCase()
+      return { jp: jp.trim(), en: en.trim() };
     });
 }
 
@@ -61,7 +63,7 @@ function loadNextQuestion() {
 
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
-  enText.textContent = question.en; // Show both English and Japanese
+  enText.textContent = question.en;
 
   answerInput.value = "";
   answerInput.disabled = false;
@@ -71,38 +73,41 @@ function loadNextQuestion() {
   feedback.style.color = "black";
 
   nextBtn.disabled = true;
-  tryAgainBtn.style.display = "none"; // hide try again button on new question
+  tryAgainBtn.style.display = "none";
+  answered = false;
 
   speak(question.en);
 }
 
 function checkAnswer() {
-  const userAnswer = answerInput.value.trim().toLowerCase();
-  const correctAnswer = questions[currentQuestionIndex].en.toLowerCase();
+  if (answered) return;
+  answered = true;
+
+  const userAnswer = answerInput.value.trim();
+  const correctAnswer = questions[currentQuestionIndex].en;
 
   if (userAnswer === correctAnswer) {
     feedback.innerHTML = "✔️ <strong>Correct!</strong>";
     feedback.style.color = "green";
     combo++;
     score += 10 + Math.min(combo, maxComboForBonus);
-    xp += 10;
-    showFloatingXP("+10 XP");
+    gainXP(1);
+    showFloatingXP("+1 XP");
     updateStats();
-    checkLevelUp();
     triggerConfetti();
 
     answerInput.disabled = true;
     nextBtn.disabled = false;
     tryAgainBtn.style.display = "none";
   } else {
-    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br> Correct answer: <em>${questions[currentQuestionIndex].en}</em>`;
+    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br> Correct answer: <em>${correctAnswer}</em>`;
     feedback.style.color = "red";
     combo = 0;
     updateStats();
 
     answerInput.disabled = true;
     nextBtn.disabled = true;
-    tryAgainBtn.style.display = "inline-block"; // show try again button
+    tryAgainBtn.style.display = "inline-block";
   }
 }
 
@@ -115,6 +120,26 @@ function tryAgain() {
 
   tryAgainBtn.style.display = "none";
   nextBtn.disabled = true;
+  answered = false;
+}
+
+function gainXP(amount) {
+  xp += amount;
+
+  while (xp >= xpToNextLevel(level)) {
+    xp -= xpToNextLevel(level);
+    level++;
+  }
+
+  updateStats();
+}
+
+function xpToNextLevel(currentLevel) {
+  let xpRequired = 3;
+  for (let i = 2; i <= currentLevel; i++) {
+    xpRequired += i;
+  }
+  return xpRequired;
 }
 
 function updateStats() {
@@ -122,16 +147,8 @@ function updateStats() {
   comboEl.textContent = combo;
   levelEl.textContent = level;
 
-  const xpPercent = Math.min(xp % 100, 100);
-  xpBar.style.width = `${xpPercent}%`;
-}
-
-function checkLevelUp() {
-  if (xp >= 100) {
-    level++;
-    xp = xp % 100;
-    levelEl.textContent = level;
-  }
+  const percent = (xp / xpToNextLevel(level)) * 100;
+  xpBar.style.width = `${Math.min(percent, 100)}%`;
 }
 
 function shuffleArray(array) {
