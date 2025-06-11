@@ -25,8 +25,15 @@ nextBtn.addEventListener("click", () => {
   loadNextQuestion();
 });
 answerInput.addEventListener("keydown", function (e) {
-  if (e.key === "Enter") checkAnswer();
+  if (e.key === "Enter") {
+    if (!answered) {
+      checkAnswer();
+    } else if (!nextBtn.disabled) {
+      nextBtn.click(); // Automatically go to next question if already answered correctly
+    }
+  }
 });
+
 tryAgainBtn.addEventListener("click", tryAgain);
 
 function startQuiz() {
@@ -72,7 +79,7 @@ function loadNextQuestion() {
   feedback.textContent = "";
   feedback.style.color = "black";
 
-  nextBtn.disabled = true;
+  nextBtn.disabled = false;
   tryAgainBtn.style.display = "none";
   answered = false;
 
