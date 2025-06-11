@@ -42,7 +42,7 @@ startBtn.addEventListener("click", () => {
 
 // Use correct path for GitHub Pages.
 // If your repo is at https://phennylalanine.github.io/lever/, use './questions.csv'
-Papa.parse("./questions.csv", {
+Papa.parse("questions.csv", {
   download: true,
   header: true,
   complete: function(results) {
