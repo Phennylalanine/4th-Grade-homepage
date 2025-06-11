@@ -7,10 +7,12 @@ let level = 1;
 let userInteracted = false;
 let missedQuestions = [];
 let questionCount = 0;
+let isQuestionsLoaded = false;
 
 // Start screen elements
 const startScreen = document.getElementById("startScreen");
 const startBtn = document.getElementById("startBtn");
+const loadingMessage = document.getElementById("loadingMessage");
 
 // DOM elements
 const questionDisplay = document.getElementById("question");
@@ -27,6 +29,10 @@ const reviewBtn = document.getElementById("reviewBtn");
 
 // Start the game on button click
 startBtn.addEventListener("click", () => {
+  if (!isQuestionsLoaded) {
+    alert("Questions are still loading. Please wait a moment.");
+    return;
+  }
   userInteracted = true;
   startScreen.style.display = "none";
   showQuestion();
@@ -38,6 +44,8 @@ Papa.parse("questions.csv", {
   header: true,
   complete: function(results) {
     questions = results.data.filter(q => q.jp && q.en);
+    isQuestionsLoaded = true;
+    if (loadingMessage) loadingMessage.style.display = "none";
   }
 });
 
@@ -79,15 +87,13 @@ function updateScoreAndStreakDisplay() {
 }
 
 function updateXPDisplay() {
-  if (xpDisplay) xpDisplay.textContent = "XP: " + xp;
-  if (levelDisplay) levelDisplay.textContent = "Lv: " + level;
+  xpDisplay.textContent = "XP: " + xp;
+  levelDisplay.textContent = "Lv: " + level;
 
   const baseXP = 1;
   const xpNeeded = (level ** 2) * baseXP;
   const progressPercent = Math.min((xp / xpNeeded) * 100, 100);
-  if (xpProgress) {
-    xpProgress.style.width = progressPercent + "%";
-  }
+  xpProgress.style.width = progressPercent + "%";
 }
 
 function saveProgress() {
