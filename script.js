@@ -1,294 +1,182 @@
-// script.js
+const questionEl = document.getElementById("question");
+const answerInput = document.getElementById("answerInput");
+const submitBtn = document.getElementById("submitBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progressBar = document.getElementById("progressBar");
+const levelEl = document.getElementById("level");
+const comboEl = document.getElementById("combo");
+const xpFloatContainer = document.getElementById("xpFloatContainer");
+const confettiContainer = document.getElementById("confetti");
 
 let questions = [];
 let currentIndex = -1;
-let points = 0;
+let lastIndex = -1;
+let level = parseInt(localStorage.getItem("months_level")) || 1;
+let xp = parseInt(localStorage.getItem("months_xp")) || 0;
 let combo = 0;
-let xp = 0;
-let level = 1;
+let doubleXP = false;
+let tripleXP = false;
+let quadrupleXP = false;
+let quintupleXP = false;
 
-const xpBar = document.getElementById("xpBar");
-const pointsEl = document.getElementById("points");
-const comboEl = document.getElementById("combo");
-const levelEl = document.getElementById("level");
-const jpTextEl = document.getElementById("jpText");
-const enTextEl = document.getElementById("enText");
-const answerInput = document.getElementById("answerInput");
-const feedbackEl = document.getElementById("feedback");
-const nextBtn = document.getElementById("nextBtn");
-const startScreen = document.getElementById("startScreen");
-const quizScreen = document.getElementById("quizScreen");
-const confettiCanvas = document.getElementById("confettiCanvas");
-const confettiCtx = confettiCanvas.getContext("2d");
+fetch("questions.csv")
+  .then(response => response.text())
+  .then(text => {
+    questions = text
+      .trim()
+      .split("\n")
+      .map(line => {
+        const [jp, en] = line.split(",");
+        return { jp: jp.trim(), en: en.trim() };
+      });
+    shuffleQuestions();
+  });
 
-let lastQuestionIndex = null;
-let confettiParticles = [];
-let confettiAnimationId = null;
-
-// Keys for localStorage
-const levelKey = "months_level";
-const xpKey = "months_xp";
-
-// Load level and xp from localStorage or default
-function loadProgress() {
-  level = parseInt(localStorage.getItem(levelKey)) || 1;
-  xp = parseInt(localStorage.getItem(xpKey)) || 0;
-  updateLevelDisplay();
-  updateXpBar();
+function shuffleQuestions() {
+  // Fisher-Yates shuffle but with no immediate repeats
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
 }
 
-// Save level and xp to localStorage
-function saveProgress() {
-  localStorage.setItem(levelKey, level);
-  localStorage.setItem(xpKey, xp);
+function getNextIndex() {
+  let idx;
+  do {
+    idx = Math.floor(Math.random() * questions.length);
+  } while (idx === lastIndex);
+  lastIndex = idx;
+  return idx;
 }
 
-function updateLevelDisplay() {
-  levelEl.textContent = level;
+function startQuiz() {
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("quizContainer").style.display = "block";
+  loadNextQuestion();
 }
 
-function updateXpBar() {
-  const neededXp = (level + 1) * 3;
-  const percent = Math.min((xp / neededXp) * 100, 100);
-  xpBar.style.width = percent + "%";
-}
-
-function nextQuestion() {
-  feedbackEl.textContent = "";
+function loadNextQuestion() {
+  currentIndex = getNextIndex();
+  const question = questions[currentIndex];
+  questionEl.textContent = `${question.jp} - ${question.en}`;
   answerInput.value = "";
-  nextBtn.disabled = true;
   answerInput.disabled = false;
   answerInput.focus();
-
-  let newIndex;
-  do {
-    newIndex = Math.floor(Math.random() * questions.length);
-  } while (newIndex === lastQuestionIndex && questions.length > 1);
-
-  currentIndex = newIndex;
-  lastQuestionIndex = currentIndex;
-
-  const q = questions[currentIndex];
-  jpTextEl.textContent = q.jp;
-  enTextEl.textContent = q.en;
-
-  // Speak the English word automatically
-  speakWord(q.en);
+  submitBtn.disabled = false;
+  nextBtn.disabled = true;
+  comboEl.textContent = combo;
+  levelEl.textContent = `Level: ${level}`;
+  updateProgressBar();
+  speakEnglish(question.en);
 }
 
-function speakWord(text) {
-  if (!window.speechSynthesis) return;
-
-  // Cancel any current speech
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-US';
-  window.speechSynthesis.speak(utterance);
+function updateProgressBar() {
+  const xpNeeded = (level + 1) * 3;
+  progressBar.max = xpNeeded;
+  progressBar.value = xp;
 }
 
 function handleAnswerSubmit() {
-  const userAnswer = answerInput.value;
-  const correctAnswer = questions[currentIndex].en;
-
-  if (userAnswer === "") {
-    feedbackEl.textContent = "Please type your answer.";
-    return;
-  }
-
-  if (userAnswer === correctAnswer) {
-    // Correct
-    feedbackEl.style.color = "green";
-    feedbackEl.textContent = "Correct!";
-    points++;
+  const answer = answerInput.value.trim();
+  const correct = questions[currentIndex].en;
+  if (answer === "") return; // no blank submissions
+  if (answer === correct) {
     combo++;
-    let xpGain = 1;
-
+    xp += 1;
     if (combo >= 15) {
-      // Double XP at 15+
-      xpGain *= 2;
+      doubleXP = true;
+      if (combo >= 20) tripleXP = true;
+      if (combo >= 25) quadrupleXP = true;
+      if (combo >= 35) quintupleXP = true;
     }
-    if (combo >= 20) {
-      // Triple XP at 20+
-      xpGain *= 1.5;
+    if (doubleXP) {
+      xp += 1;
+      showXPFloat("+2 XP!");
     }
-    if (combo >= 25) {
-      // Quadruple XP at 25+
-      xpGain *= 1.33;
+    if (tripleXP) {
+      xp += 2;
+      showXPFloat("+3 XP!");
     }
-    if (combo >= 35) {
-      // Quintuple XP at 35+
-      xpGain *= 1.25;
+    if (quadrupleXP) {
+      xp += 3;
+      showXPFloat("+4 XP!");
     }
-    xpGain = Math.floor(xpGain);
-
-    addXp(xpGain);
-
-    pointsEl.textContent = points;
+    if (quintupleXP) {
+      xp += 4;
+      showXPFloat("+5 XP!");
+    }
+    checkLevelUp();
     comboEl.textContent = combo;
-
   } else {
-    // Incorrect
-    feedbackEl.style.color = "red";
-    feedbackEl.innerHTML = `Your input: <b>${userAnswer}</b><br>Correct input: <b>${correctAnswer}</b>`;
     combo = 0;
     comboEl.textContent = combo;
+    alert(`Your input: ${answer}\nCorrect input: ${correct}`);
   }
-
   answerInput.disabled = true;
+  submitBtn.disabled = true;
   nextBtn.disabled = false;
 }
 
-function addXp(amount) {
-  xp += amount;
-  const neededXp = (level + 1) * 3;
-
-  showFloatingXp(`+${amount} XP`);
-
-  while (xp >= neededXp) {
-    xp -= neededXp;
+function checkLevelUp() {
+  const xpNeeded = (level + 1) * 3;
+  while (xp >= xpNeeded) {
+    xp -= xpNeeded;
     level++;
-    updateLevelDisplay();
-    confettiExplosion();
+    localStorage.setItem("months_level", level);
+    confettiBurst();
   }
-
-  updateXpBar();
-  saveProgress();
+  localStorage.setItem("months_xp", xp);
+  updateProgressBar();
+  levelEl.textContent = `Level: ${level}`;
 }
 
-// Floating XP animation
-function showFloatingXp(text) {
-  const xpFloat = document.createElement("div");
-  xpFloat.classList.add("floating-xp");
-  xpFloat.textContent = text;
-  xpFloat.style.left = (window.innerWidth / 2 - 30 + (Math.random() * 60 - 30)) + "px";
-  xpFloat.style.top = (window.innerHeight / 2 + 20) + "px";
-  document.body.appendChild(xpFloat);
+function confettiBurst() {
+  const confettiCount = 100;
+  for (let i = 0; i < confettiCount; i++) {
+    const confetti = document.createElement("div");
+    confetti.classList.add("confetti-piece");
+    confetti.style.left = Math.random() * 100 + "vw";
+    confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 70%)`;
+    confetti.style.animationDuration = (Math.random() * 3 + 2) + "s";
+    confettiContainer.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 5000);
+  }
+}
 
+function showXPFloat(text) {
+  const floatEl = document.createElement("div");
+  floatEl.classList.add("xp-float");
+  floatEl.textContent = text;
+  xpFloatContainer.appendChild(floatEl);
   setTimeout(() => {
-    xpFloat.remove();
+    floatEl.style.opacity = "0";
+    setTimeout(() => floatEl.remove(), 1000);
   }, 1500);
 }
 
-// CONFETTI
-
-function confettiExplosion() {
-  confettiCanvas.width = window.innerWidth;
-  confettiCanvas.height = window.innerHeight;
-
-  confettiParticles = [];
-
-  const colors = ["#FFC107", "#FF5722", "#4CAF50", "#2196F3", "#9C27B0"];
-
-  for (let i = 0; i < 100; i++) {
-    confettiParticles.push({
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-      r: Math.random() * 6 + 4,
-      d: Math.random() * 20 + 10,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      tilt: Math.random() * 10 - 10,
-      tiltAngleIncremental: Math.random() * 0.07 + 0.05,
-      tiltAngle: 0
-    });
-  }
-
-  if (!confettiAnimationId) {
-    runConfetti();
-    setTimeout(() => {
-      cancelAnimationFrame(confettiAnimationId);
-      confettiAnimationId = null;
-      clearCanvas();
-    }, 3000);
-  }
+function speakEnglish(text) {
+  if (!("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  window.speechSynthesis.cancel(); // cancel previous speech if any
+  window.speechSynthesis.speak(utterance);
 }
 
-function runConfetti() {
-  confettiAnimationId = requestAnimationFrame(runConfetti);
-  clearCanvas();
-  updateConfetti();
-  drawConfetti();
-}
+submitBtn.addEventListener("click", handleAnswerSubmit);
 
-function clearCanvas() {
-  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-}
+nextBtn.addEventListener("click", loadNextQuestion);
 
-function updateConfetti() {
-  for (let i = 0; i < confettiParticles.length; i++) {
-    const p = confettiParticles[i];
-    p.tiltAngle += p.tiltAngleIncremental;
-    p.x += Math.sin(p.tiltAngle) * 2;
-    p.y += (Math.cos(p.tiltAngle) + 3 + p.d / 2) * 1.5;
-    p.tilt = Math.sin(p.tiltAngle) * 15;
-
-    if (p.y > window.innerHeight) {
-      p.x = Math.random() * window.innerWidth;
-      p.y = -20;
-      p.tilt = Math.random() * 10 - 10;
+answerInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    if (answerInput.disabled) {
+      if (!nextBtn.disabled) {
+        loadNextQuestion();
+      }
+    } else {
+      handleAnswerSubmit();
     }
   }
-}
-
-function drawConfetti() {
-  for (let i = 0; i < confettiParticles.length; i++) {
-    const p = confettiParticles[i];
-    confettiCtx.beginPath();
-    confettiCtx.lineWidth = p.r / 2;
-    confettiCtx.strokeStyle = p.color;
-    confettiCtx.moveTo(p.x + p.tilt + p.r / 4, p.y);
-    confettiCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 4);
-    confettiCtx.stroke();
-  }
-}
-
-// Load CSV questions from file
-function loadCSV() {
-  return fetch("questions.csv")
-    .then(response => response.text())
-    .then(text => {
-      const lines = text.trim().split("\n");
-      const qArray = [];
-
-      for (const line of lines) {
-        // CSV format: jp,en
-        const [jp, en] = line.split(",");
-        if (jp && en) qArray.push({ jp: jp.trim(), en: en.trim() });
-      }
-      return qArray;
-    });
-}
-
-// Event listeners
-answerInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !nextBtn.disabled) {
-    nextQuestion();
-  } else if (e.key === "Enter") {
-    handleAnswerSubmit();
-  }
 });
 
-nextBtn.addEventListener("click", () => {
-  nextQuestion();
-});
-
-document.getElementById("startBtn").addEventListener("click", () => {
-  startScreen.classList.remove("active");
-  quizScreen.classList.add("active");
-  answerInput.focus();
-  loadCSV().then(qs => {
-    questions = qs;
-    loadProgress();
-    nextQuestion();
-  });
-});
-
-// For debugging - uncomment to test directly without start screen
-// loadCSV().then(qs => {
-//   questions = qs;
-//   loadProgress();
-//   nextQuestion();
-//   startScreen.classList.remove("active");
-//   quizScreen.classList.add("active");
-// });
-
+document.getElementById("startBtn").addEventListener("click", startQuiz);
