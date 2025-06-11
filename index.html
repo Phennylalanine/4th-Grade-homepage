@@ -2,133 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quiz Game</title>
+  <title>Months Quiz</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    #startScreen,
-    #quizContainer {
-      background-color: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      width: 90%;
+      font-family: Arial, sans-serif;
       max-width: 500px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f5f5f5;
       text-align: center;
     }
-
     #question {
-      font-size: 1.2em;
-      margin-bottom: 10px;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
     }
-
-    #answerInput {
-      width: 100%;
-      padding: 10px;
-      font-size: 1em;
-      margin-bottom: 10px;
-    }
-
-    #feedback {
-      margin-top: 10px;
-      font-size: 0.95em;
-    }
-
-    #scoreBoard {
-      margin-top: 20px;
-      font-size: 0.9em;
+    #jpQuestion {
+      font-weight: bold;
+      font-size: 1.4rem;
       color: #444;
     }
-
-    #xpBar {
-      width: 100%;
-      background-color: #ddd;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 5px;
+    #enQuestion {
+      font-size: 1.1rem;
+      margin-bottom: 0.8rem;
+      color: #666;
     }
-
-    #xpProgress {
-      height: 100%;
-      background-color: orange;
-      width: 0%;
-      transition: width 0.3s;
+    input[type="text"] {
+      padding: 0.5rem;
+      width: 80%;
+      font-size: 1.1rem;
     }
-
     button {
-      padding: 10px 20px;
-      font-size: 1em;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
       cursor: pointer;
     }
-
-    #speakBtn {
+    #message {
+      margin-top: 1rem;
+      color: red;
+      font-weight: bold;
+    }
+    #scoreboard {
+      margin-top: 2rem;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    #xpBarContainer {
+      margin: 1rem auto;
+      background: #ddd;
+      border-radius: 10px;
+      width: 80%;
+      height: 20px;
+      overflow: hidden;
+    }
+    #xpBar {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    #confetti-canvas {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      font-size: 1.5em;
-      background-color: #fff;
-      border: 2px solid #ccc;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
+      pointer-events: none;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 9999;
     }
-
-    #xpMultiplierAnim {
-      position: absolute;
-      font-size: 1.2em;
-      animation: none;
+    .xp-float {
+      position: fixed;
+      font-weight: bold;
+      color: #4caf50;
+      font-size: 1.2rem;
+      user-select: none;
+      pointer-events: none;
+      animation: floatUp 1.2s ease forwards;
     }
-
-    @keyframes floatUpFade {
-      0% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-40px);
-      }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-50px); }
     }
   </style>
 </head>
 <body>
-  <div id="startScreen">
-    <h1>Ready?</h1>
-    <button id="startBtn">Start</button>
+
+  <h1>Months Quiz</h1>
+  <div id="question">
+    <div id="jpQuestion"></div>
+    <div id="enQuestion"></div>
+  </div>
+  <input type="text" id="answerInput" autocomplete="off" />
+  <br />
+  <button id="nextBtn" disabled>Next</button>
+
+  <div id="message"></div>
+
+  <div id="scoreboard">
+    Score: <span id="score">0</span> | Combo: <span id="combo">0</span> | Level: <span id="level">1</span>
+  </div>
+  <div id="xpBarContainer">
+    <div id="xpBar"></div>
   </div>
 
-  <div id="quizContainer" style="display: none;">
-    <p id="question">Loading...</p>
-    <input type="text" id="answerInput" placeholder="Answer in Japanese..." />
-    <div>
-      <button id="submitBtn">Submit</button>
-    </div>
-    <p id="feedback"></p>
-    <div id="scoreBoard">
-      <p>Score: <span id="score">0</span></p>
-      <p>Combo: <span id="combo">0</span></p>
-      <div id="xpBar">
-        <div id="xpProgress"></div>
-      </div>
-    </div>
-  </div>
-
-  <button id="speakBtn">🔊</button>
-  <div id="xpMultiplierAnim"></div>
+  <canvas id="confetti-canvas"></canvas>
 
   <script src="script.js"></script>
 </body>
