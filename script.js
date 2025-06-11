@@ -9,6 +9,7 @@ let userInteracted = false;
 // Start screen elements
 const startScreen = document.getElementById("startScreen");
 const startBtn = document.getElementById("startBtn");
+const quizContainer = document.getElementById("quizContainer"); // ✅ FIX ADDED
 
 // DOM elements
 const questionDisplay = document.getElementById("question");
@@ -28,6 +29,7 @@ const xpMultiplierAnim = document.getElementById("xpMultiplierAnim");
 startBtn.addEventListener("click", () => {
   userInteracted = true;
   startScreen.style.display = "none";
+  quizContainer.style.display = "flex"; // ✅ SHOW QUIZ
   showQuestion();
 });
 
@@ -124,13 +126,10 @@ function showFeedback(correct, expected, userInput) {
     streak++;
     score++;
 
-    // Calculate XP multiplier based on streak every 15 streaks
     const xpMultiplier = 1 + Math.floor(streak / 15);
     const xpGained = xpMultiplier;
 
-    // Add XP and show bonus animation if multiplier > 1
     xp += xpGained;
-
     feedback.innerHTML = `✅ 正解！Good job!<br/>XP +${xpGained}`;
 
     if (xpMultiplier > 1) {
