@@ -5,11 +5,12 @@ let streak = 0;
 let xp = 0;
 let level = 1;
 let userInteracted = false;
+let missedQuestions = [];
+let questionCount = 0;
 
 // Start screen elements
 const startScreen = document.getElementById("startScreen");
 const startBtn = document.getElementById("startBtn");
-const quizContainer = document.getElementById("quizContainer"); // ✅ FIX ADDED
 
 // DOM elements
 const questionDisplay = document.getElementById("question");
@@ -20,16 +21,14 @@ const scoreDisplay = document.getElementById("score");
 const streakDisplay = document.getElementById("streak");
 const xpDisplay = document.getElementById("xp");
 const levelDisplay = document.getElementById("level");
-
-// New DOM elements for XP progress bar and multiplier animation
 const xpProgress = document.getElementById("xpProgress");
 const xpMultiplierAnim = document.getElementById("xpMultiplierAnim");
+const reviewBtn = document.getElementById("reviewBtn");
 
 // Start the game on button click
 startBtn.addEventListener("click", () => {
   userInteracted = true;
   startScreen.style.display = "none";
-  quizContainer.style.display = "flex"; // ✅ SHOW QUIZ
   showQuestion();
 });
 
@@ -38,7 +37,7 @@ Papa.parse("questions.csv", {
   download: true,
   header: true,
   complete: function(results) {
-    questions = results.data.filter(q => q.jp && q.en); // Filter valid rows
+    questions = results.data.filter(q => q.jp && q.en);
   }
 });
 
@@ -53,13 +52,21 @@ function speak(text) {
 }
 
 function showQuestion() {
+  if (!questions.length) return;
+
   currentQuestion = getRandomQuestion();
   questionDisplay.textContent = `${currentQuestion.en} ${currentQuestion.jp}`;
   answerInput.value = "";
   answerInput.disabled = false;
   feedback.innerHTML = "";
   nextBtn.style.display = "none";
+  answerInput.style.display = "block";
   answerInput.focus();
+  questionCount++;
+
+  if (questionCount >= 5 && missedQuestions.length > 0) {
+    reviewBtn.style.display = "inline-block";
+  }
 
   if (userInteracted && currentQuestion.en) {
     speak(currentQuestion.en);
@@ -97,6 +104,14 @@ function loadProgress() {
   updateXPDisplay();
 }
 
+function launchConfetti() {
+  confetti({
+    particleCount: 150,
+    spread: 70,
+    origin: { y: 0.6 }
+  });
+}
+
 function checkLevelUp() {
   const baseXP = 1;
   const xpNeeded = (level ** 2) * baseXP;
@@ -105,7 +120,8 @@ function checkLevelUp() {
     level++;
     xp -= xpNeeded;
     feedback.innerHTML += `<br/>🎉 レベルアップ！Now Level ${level}`;
-    saveProgress(); // Ensure progress is saved after level up
+    launchConfetti();
+    saveProgress();
     updateXPDisplay();
   }
 }
@@ -128,8 +144,8 @@ function showFeedback(correct, expected, userInput) {
 
     const xpMultiplier = 1 + Math.floor(streak / 15);
     const xpGained = xpMultiplier;
-
     xp += xpGained;
+
     feedback.innerHTML = `✅ 正解！Good job!<br/>XP +${xpGained}`;
 
     if (xpMultiplier > 1) {
@@ -155,6 +171,8 @@ function showFeedback(correct, expected, userInput) {
       <strong>あなたの答え:</strong> ${userInput}<br/>
       <strong>ここが間違い:</strong> ${correctPart}<span style="color:red">${wrongPart}</span>
     `;
+
+    missedQuestions.push({ expected, userInput });
     streak = 0;
     updateScoreAndStreakDisplay();
   }
@@ -178,7 +196,6 @@ answerInput.addEventListener("keydown", function(e) {
 
 nextBtn.addEventListener("click", showQuestion);
 
-// Optional: manual speak button
 const speakBtn = document.getElementById("speakBtn");
 if (speakBtn) {
   speakBtn.addEventListener("click", function() {
@@ -188,5 +205,18 @@ if (speakBtn) {
   });
 }
 
-// Initialize
+reviewBtn.addEventListener("click", function () {
+  let reviewText = "<h3>復習：間違えた単語</h3><ul>";
+  missedQuestions.forEach(q => {
+    reviewText += `<li><strong>正解:</strong> ${q.expected} <br/><strong>あなたの答え:</strong> ${q.userInput}</li>`;
+  });
+  reviewText += "</ul>";
+
+  questionDisplay.innerHTML = reviewText;
+  answerInput.style.display = "none";
+  nextBtn.style.display = "none";
+  reviewBtn.style.display = "none";
+  feedback.innerHTML = "";
+});
+
 loadProgress();
