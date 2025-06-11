@@ -1,234 +1,294 @@
 // script.js
 
-// Confetti lib (tiny, vanilla) - adapted from https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js
-// For simplicity, here is a minimal confetti function:
-function confettiBurst() {
-  const duration = 2 * 1000;
-  const end = Date.now() + duration;
-
-  (function frame() {
-    confetti({
-      particleCount: 5,
-      startVelocity: 30,
-      spread: 360,
-      ticks: 60,
-      origin: { x: Math.random(), y: Math.random() * 0.6 }
-    });
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  })();
-}
-
-// Load canvas-confetti from CDN dynamically
-function loadConfettiLib() {
-  return new Promise((res) => {
-    if (window.confetti) return res();
-    const script = document.createElement('script');
-    script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
-    script.onload = () => res();
-    document.body.appendChild(script);
-  });
-}
-
-const jpQuestionEl = document.getElementById("jpQuestion");
-const enQuestionEl = document.getElementById("enQuestion");
-const answerInput = document.getElementById("answerInput");
-const nextBtn = document.getElementById("nextBtn");
-const messageEl = document.getElementById("message");
-const scoreEl = document.getElementById("score");
-const comboEl = document.getElementById("combo");
-const levelEl = document.getElementById("level");
-const xpBar = document.getElementById("xpBar");
-const xpBarContainer = document.getElementById("xpBarContainer");
-
-const STORAGE_LEVEL_KEY = "months_level";
-const STORAGE_XP_KEY = "months_xp";
-
 let questions = [];
-let currentIndex = 0;
-let score = 0;
+let currentIndex = -1;
+let points = 0;
 let combo = 0;
 let xp = 0;
 let level = 1;
-let answered = false;
 
-// XP needed for next level
-function xpToNextLevel(lv) {
-  return (lv + 1) * 3;
-}
+const xpBar = document.getElementById("xpBar");
+const pointsEl = document.getElementById("points");
+const comboEl = document.getElementById("combo");
+const levelEl = document.getElementById("level");
+const jpTextEl = document.getElementById("jpText");
+const enTextEl = document.getElementById("enText");
+const answerInput = document.getElementById("answerInput");
+const feedbackEl = document.getElementById("feedback");
+const nextBtn = document.getElementById("nextBtn");
+const startScreen = document.getElementById("startScreen");
+const quizScreen = document.getElementById("quizScreen");
+const confettiCanvas = document.getElementById("confettiCanvas");
+const confettiCtx = confettiCanvas.getContext("2d");
 
-// Load saved data or initialize
-function loadData() {
-  level = parseInt(localStorage.getItem(STORAGE_LEVEL_KEY)) || 1;
-  xp = parseInt(localStorage.getItem(STORAGE_XP_KEY)) || 0;
+let lastQuestionIndex = null;
+let confettiParticles = [];
+let confettiAnimationId = null;
+
+// Keys for localStorage
+const levelKey = "months_level";
+const xpKey = "months_xp";
+
+// Load level and xp from localStorage or default
+function loadProgress() {
+  level = parseInt(localStorage.getItem(levelKey)) || 1;
+  xp = parseInt(localStorage.getItem(xpKey)) || 0;
   updateLevelDisplay();
-  updateXPBar();
+  updateXpBar();
 }
 
-// Save data
-function saveData() {
-  localStorage.setItem(STORAGE_LEVEL_KEY, level);
-  localStorage.setItem(STORAGE_XP_KEY, xp);
-}
-
-// Show question
-function showQuestion() {
-  if (currentIndex >= questions.length) {
-    // End of quiz
-    jpQuestionEl.textContent = "🎉 You've completed all questions!";
-    enQuestionEl.textContent = "";
-    answerInput.disabled = true;
-    nextBtn.disabled = true;
-    return;
-  }
-  const q = questions[currentIndex];
-  jpQuestionEl.textContent = q.jp;
-  enQuestionEl.textContent = q.en;
-  answerInput.value = "";
-  answerInput.disabled = false;
-  answerInput.focus();
-  nextBtn.disabled = true;
-  messageEl.textContent = "";
-  answered = false;
-}
-
-function showXPFloat(multiplier) {
-  const floatEl = document.createElement("div");
-  floatEl.textContent = `+${multiplier} XP!`;
-  floatEl.classList.add("xp-float");
-  // Random position near center bottom
-  floatEl.style.left = (window.innerWidth / 2 + (Math.random() * 100 - 50)) + "px";
-  floatEl.style.top = (window.innerHeight - 100 + (Math.random() * 30 - 15)) + "px";
-  document.body.appendChild(floatEl);
-  setTimeout(() => {
-    floatEl.remove();
-  }, 1200);
-}
-
-// Calculate XP multiplier based on combo count
-function getXPMultiplier(cmb) {
-  if (cmb < 15) return 1;
-  if (cmb >= 15 && cmb < 20) return 2;
-  if (cmb >= 20 && cmb < 25) return 3;
-  if (cmb >= 25 && cmb < 30) return 4;
-  // 30+ combo quadruple XP and above:
-  if (cmb >= 30) {
-    // For every 5 combo after 25, increase multiplier by 1
-    return 4 + Math.floor((cmb - 25) / 5);
-  }
-  return 1;
+// Save level and xp to localStorage
+function saveProgress() {
+  localStorage.setItem(levelKey, level);
+  localStorage.setItem(xpKey, xp);
 }
 
 function updateLevelDisplay() {
   levelEl.textContent = level;
 }
 
-function updateXPBar() {
-  const needed = xpToNextLevel(level);
-  const percent = Math.min(100, (xp / needed) * 100);
+function updateXpBar() {
+  const neededXp = (level + 1) * 3;
+  const percent = Math.min((xp / neededXp) * 100, 100);
   xpBar.style.width = percent + "%";
 }
 
-// Handle answer submission
-function submitAnswer() {
-  if (answered) return;
-  const userAnswer = answerInput.value.trim();
+function nextQuestion() {
+  feedbackEl.textContent = "";
+  answerInput.value = "";
+  nextBtn.disabled = true;
+  answerInput.disabled = false;
+  answerInput.focus();
+
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * questions.length);
+  } while (newIndex === lastQuestionIndex && questions.length > 1);
+
+  currentIndex = newIndex;
+  lastQuestionIndex = currentIndex;
+
+  const q = questions[currentIndex];
+  jpTextEl.textContent = q.jp;
+  enTextEl.textContent = q.en;
+
+  // Speak the English word automatically
+  speakWord(q.en);
+}
+
+function speakWord(text) {
+  if (!window.speechSynthesis) return;
+
+  // Cancel any current speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  window.speechSynthesis.speak(utterance);
+}
+
+function handleAnswerSubmit() {
+  const userAnswer = answerInput.value;
   const correctAnswer = questions[currentIndex].en;
 
-  if (userAnswer === "") return; // do nothing on empty
+  if (userAnswer === "") {
+    feedbackEl.textContent = "Please type your answer.";
+    return;
+  }
 
   if (userAnswer === correctAnswer) {
     // Correct
-    score++;
+    feedbackEl.style.color = "green";
+    feedbackEl.textContent = "Correct!";
+    points++;
     combo++;
-    let multiplier = getXPMultiplier(combo);
+    let xpGain = 1;
 
-    // Points and combo +1, XP + multiplier
-    let xpGain = multiplier;
-    xp += xpGain;
-
-    // Save data to localStorage
-    // Check level up
-    const needed = xpToNextLevel(level);
-    if (xp >= needed) {
-      xp -= needed;
-      level++;
-      updateLevelDisplay();
-      loadConfettiLib().then(() => {
-        confetti();
-      });
+    if (combo >= 15) {
+      // Double XP at 15+
+      xpGain *= 2;
     }
-    updateXPBar();
-    saveData();
+    if (combo >= 20) {
+      // Triple XP at 20+
+      xpGain *= 1.5;
+    }
+    if (combo >= 25) {
+      // Quadruple XP at 25+
+      xpGain *= 1.33;
+    }
+    if (combo >= 35) {
+      // Quintuple XP at 35+
+      xpGain *= 1.25;
+    }
+    xpGain = Math.floor(xpGain);
 
-    scoreEl.textContent = score;
+    addXp(xpGain);
+
+    pointsEl.textContent = points;
     comboEl.textContent = combo;
 
-    if (multiplier > 1) {
-      showXPFloat(multiplier);
-    }
-
-    messageEl.style.color = "green";
-    messageEl.textContent = "Correct!";
   } else {
-    // Incorrect, show error message with case difference
-    combo = 0; // reset combo on fail
+    // Incorrect
+    feedbackEl.style.color = "red";
+    feedbackEl.innerHTML = `Your input: <b>${userAnswer}</b><br>Correct input: <b>${correctAnswer}</b>`;
+    combo = 0;
     comboEl.textContent = combo;
-    messageEl.style.color = "red";
-    messageEl.innerHTML = `Wrong!<br>Your input: <b>${userAnswer}</b><br>Correct input: <b>${correctAnswer}</b>`;
   }
-  answered = true;
+
   answerInput.disabled = true;
   nextBtn.disabled = false;
-  nextBtn.focus();
 }
 
-// Load CSV and parse
+function addXp(amount) {
+  xp += amount;
+  const neededXp = (level + 1) * 3;
+
+  showFloatingXp(`+${amount} XP`);
+
+  while (xp >= neededXp) {
+    xp -= neededXp;
+    level++;
+    updateLevelDisplay();
+    confettiExplosion();
+  }
+
+  updateXpBar();
+  saveProgress();
+}
+
+// Floating XP animation
+function showFloatingXp(text) {
+  const xpFloat = document.createElement("div");
+  xpFloat.classList.add("floating-xp");
+  xpFloat.textContent = text;
+  xpFloat.style.left = (window.innerWidth / 2 - 30 + (Math.random() * 60 - 30)) + "px";
+  xpFloat.style.top = (window.innerHeight / 2 + 20) + "px";
+  document.body.appendChild(xpFloat);
+
+  setTimeout(() => {
+    xpFloat.remove();
+  }, 1500);
+}
+
+// CONFETTI
+
+function confettiExplosion() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+
+  confettiParticles = [];
+
+  const colors = ["#FFC107", "#FF5722", "#4CAF50", "#2196F3", "#9C27B0"];
+
+  for (let i = 0; i < 100; i++) {
+    confettiParticles.push({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+      r: Math.random() * 6 + 4,
+      d: Math.random() * 20 + 10,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.random() * 10 - 10,
+      tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+      tiltAngle: 0
+    });
+  }
+
+  if (!confettiAnimationId) {
+    runConfetti();
+    setTimeout(() => {
+      cancelAnimationFrame(confettiAnimationId);
+      confettiAnimationId = null;
+      clearCanvas();
+    }, 3000);
+  }
+}
+
+function runConfetti() {
+  confettiAnimationId = requestAnimationFrame(runConfetti);
+  clearCanvas();
+  updateConfetti();
+  drawConfetti();
+}
+
+function clearCanvas() {
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+}
+
+function updateConfetti() {
+  for (let i = 0; i < confettiParticles.length; i++) {
+    const p = confettiParticles[i];
+    p.tiltAngle += p.tiltAngleIncremental;
+    p.x += Math.sin(p.tiltAngle) * 2;
+    p.y += (Math.cos(p.tiltAngle) + 3 + p.d / 2) * 1.5;
+    p.tilt = Math.sin(p.tiltAngle) * 15;
+
+    if (p.y > window.innerHeight) {
+      p.x = Math.random() * window.innerWidth;
+      p.y = -20;
+      p.tilt = Math.random() * 10 - 10;
+    }
+  }
+}
+
+function drawConfetti() {
+  for (let i = 0; i < confettiParticles.length; i++) {
+    const p = confettiParticles[i];
+    confettiCtx.beginPath();
+    confettiCtx.lineWidth = p.r / 2;
+    confettiCtx.strokeStyle = p.color;
+    confettiCtx.moveTo(p.x + p.tilt + p.r / 4, p.y);
+    confettiCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 4);
+    confettiCtx.stroke();
+  }
+}
+
+// Load CSV questions from file
 function loadCSV() {
   return fetch("questions.csv")
-    .then(res => {
-      if (!res.ok) throw new Error("Could not load CSV");
-      return res.text();
-    })
+    .then(response => response.text())
     .then(text => {
-      // Parse CSV: jp,en
       const lines = text.trim().split("\n");
-      questions = lines.map(line => {
+      const qArray = [];
+
+      for (const line of lines) {
+        // CSV format: jp,en
         const [jp, en] = line.split(",");
-        return { jp: jp.trim(), en: en.trim() };
-      });
+        if (jp && en) qArray.push({ jp: jp.trim(), en: en.trim() });
+      }
+      return qArray;
     });
 }
 
-nextBtn.addEventListener("click", () => {
-  if (!answered) return;
-  currentIndex++;
-  showQuestion();
-});
-
-answerInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    if (!answered) {
-      submitAnswer();
-    } else {
-      if (!nextBtn.disabled) {
-        currentIndex++;
-        showQuestion();
-      }
-    }
+// Event listeners
+answerInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !nextBtn.disabled) {
+    nextQuestion();
+  } else if (e.key === "Enter") {
+    handleAnswerSubmit();
   }
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-  loadData();
-  loadCSV()
-    .then(() => {
-      showQuestion();
-    })
-    .catch(err => {
-      jpQuestionEl.textContent = "Error loading questions.csv";
-      console.error(err);
-    });
+nextBtn.addEventListener("click", () => {
+  nextQuestion();
 });
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  startScreen.classList.remove("active");
+  quizScreen.classList.add("active");
+  answerInput.focus();
+  loadCSV().then(qs => {
+    questions = qs;
+    loadProgress();
+    nextQuestion();
+  });
+});
+
+// For debugging - uncomment to test directly without start screen
+// loadCSV().then(qs => {
+//   questions = qs;
+//   loadProgress();
+//   nextQuestion();
+//   startScreen.classList.remove("active");
+//   quizScreen.classList.add("active");
+// });
+
