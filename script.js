@@ -11,16 +11,21 @@ const enText = document.getElementById("enText");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
+const tryAgainBtn = document.getElementById("tryAgainBtn"); // new button
 const pointsEl = document.getElementById("points");
 const comboEl = document.getElementById("combo");
 const levelEl = document.getElementById("level");
 const xpBar = document.getElementById("xpBar");
 
 document.getElementById("startBtn").addEventListener("click", startQuiz);
-nextBtn.addEventListener("click", checkAnswer);
+nextBtn.addEventListener("click", () => {
+  currentQuestionIndex++;
+  loadNextQuestion();
+});
 answerInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter") checkAnswer();
 });
+tryAgainBtn.addEventListener("click", tryAgain);
 
 function startQuiz() {
   document.getElementById("startScreen").classList.remove("active");
@@ -44,7 +49,7 @@ function parseCSV(data) {
     .split("\n")
     .map((line) => {
       const [jp, en] = line.split(",");
-      return { jp: jp.trim(), en: en.trim().toLowerCase() };
+      return { jp: jp.trim(), en: en.trim() }; // keep original case here, comparison is done with toLowerCase()
     });
 }
 
@@ -56,13 +61,17 @@ function loadNextQuestion() {
 
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
-  enText.textContent = question.en; // ✅ Show both English and Japanese
+  enText.textContent = question.en; // Show both English and Japanese
 
   answerInput.value = "";
   answerInput.disabled = false;
-  answerInput.focus(); // ✅ Autofocus
-  nextBtn.disabled = false;
+  answerInput.focus();
+
   feedback.textContent = "";
+  feedback.style.color = "black";
+
+  nextBtn.disabled = true;
+  tryAgainBtn.style.display = "none"; // hide try again button on new question
 
   speak(question.en);
 }
@@ -82,26 +91,38 @@ function checkAnswer() {
     checkLevelUp();
     triggerConfetti();
 
-    currentQuestionIndex++;
-    setTimeout(loadNextQuestion, 1000);
+    answerInput.disabled = true;
+    nextBtn.disabled = false;
+    tryAgainBtn.style.display = "none";
   } else {
-    feedback.innerHTML = `✖️ <strong>Wrong!</strong> <br> Correct answer: <em>${questions[currentQuestionIndex].en}</em>`;
+    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br> Correct answer: <em>${questions[currentQuestionIndex].en}</em>`;
     feedback.style.color = "red";
     combo = 0;
     updateStats();
-  }
 
-  answerInput.disabled = true;
-  nextBtn.disabled = true;
+    answerInput.disabled = true;
+    nextBtn.disabled = true;
+    tryAgainBtn.style.display = "inline-block"; // show try again button
+  }
 }
 
+function tryAgain() {
+  feedback.textContent = "";
+  feedback.style.color = "black";
+  answerInput.disabled = false;
+  answerInput.value = "";
+  answerInput.focus();
+
+  tryAgainBtn.style.display = "none";
+  nextBtn.disabled = true;
+}
 
 function updateStats() {
   pointsEl.textContent = score;
   comboEl.textContent = combo;
   levelEl.textContent = level;
 
-  const xpPercent = Math.min((xp % 100), 100);
+  const xpPercent = Math.min(xp % 100, 100);
   xpBar.style.width = `${xpPercent}%`;
 }
 
@@ -148,8 +169,7 @@ function triggerConfetti() {
       y: Math.random() * -20,
       r: Math.random() * 6 + 2,
       d: Math.random() * 5 + 1,
-      color:
-        "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 70%)",
+      color: "hsl(" + Math.floor(Math.random() * 360) + ", 100%, 70%)",
       tilt: Math.random() * 10 - 10,
     });
   }
