@@ -1,24 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lever Power Generator</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Typing Challenge</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f9f9f9;
+    }
+
+    #question {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    #answerInput {
+      font-size: 1.2em;
+      padding: 10px;
+      width: 300px;
+    }
+
+    #nextBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+
+    #feedback {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-weight: bold;
+    }
+
+    #streak {
+      position: absolute;
+      top: 40px;
+      right: 20px;
+      font-weight: bold;
+    }
+
+    #xp {
+      position: absolute;
+      top: 130px;
+      right: 20px;
+      font-weight: bold;
+    }
+
+    #level {
+      position: absolute;
+      top: 160px;
+      right: 20px;
+      font-weight: bold;
+    }
+
+    /* Start screen styles */
+    #startScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #startMessage {
+      text-align: center;
+    }
+
+    #startBtn {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="lever-container">
-            <div id="lever" class="lever"></div>
-        </div>
-        <div class="status">
-            <p>Power: <span id="power">0</span></p>
-        </div>
-        <div class="resources">
-            <h2>Unlocked Resources:</h2>
-            <div id="resources-list"></div>
-        </div>
+  <!-- Start screen -->
+  <div id="startScreen">
+    <div id="startMessage">
+      <h2>英語クイズへようこそ！</h2>
+      <p>始めるにはクリックしてください。</p>
+      <button id="startBtn">Click to Start</button>
     </div>
-    <script src="game.js"></script>
+  </div>
+
+  <!-- Quiz content -->
+  <div id="score">Score: 0</div>
+  <div id="streak">コンボ: 0</div> <!-- ✅ ADDED -->
+  <div id="question">Loading...</div>
+  <input type="text" id="answerInput" placeholder="Type the English here" autocomplete="off"/>
+  <div id="feedback"></div>
+  <button id="speakBtn">🔈 Speak</button>
+  <button id="nextBtn">Next</button>
+  <div id="xp">XP: 0</div>
+  <div id="level">Lv: 1</div>
+
+  <!-- PapaParse for CSV loading -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+  <!-- Your custom script -->
+  <script src="script.js?v=3"></script>
 </body>
 </html>
