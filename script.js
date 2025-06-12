@@ -146,7 +146,7 @@ Correct answer: <span style="color: green;">${correct}</span>`;
     nextBtn.disabled = true;
     tryAgainBtn.style.display = "inline-block";
   }
-}
+
 
 function tryAgain() {
   feedback.textContent = "";
