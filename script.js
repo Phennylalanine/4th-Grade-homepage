@@ -107,7 +107,6 @@ function checkAnswer() {
     nextBtn.disabled = false;
     tryAgainBtn.style.display = "none";
   } else {
-  } else {
   const user = answerInput.value.trim();
   const correct = questions[currentQuestionIndex].en;
 
