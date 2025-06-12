@@ -107,9 +107,40 @@ function checkAnswer() {
     nextBtn.disabled = false;
     tryAgainBtn.style.display = "none";
   } else {
-    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br> Correct answer: <em>${correctAnswer}</em>`;
-    feedback.style.color = "red";
-    combo = 0;
+  } else {
+  const user = answerInput.value.trim();
+  const correct = questions[currentQuestionIndex].en;
+
+  let comparison = "";
+  const maxLength = Math.max(user.length, correct.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const userChar = user[i] || "";
+    const correctChar = correct[i] || "";
+
+    if (userChar === correctChar) {
+      comparison += `<span style="color: green;">${correctChar}</span>`;
+    } else if (userChar && correctChar) {
+      comparison += `<span style="color: red;">${userChar}</span>`;
+    } else if (!userChar) {
+      comparison += `<span style="color: gray;">_</span>`;
+    }
+  }
+
+  feedback.innerHTML = `✖️ <strong>Wrong!</strong><br>
+Your answer: <code>${comparison}</code><br>
+Correct answer: <span style="color: green;">${correct}</span>`;
+  feedback.style.color = "red";
+  combo = 0;
+
+  updateStats();
+
+  answerInput.disabled = true;
+  nextBtn.disabled = true;
+  tryAgainBtn.style.display = "inline-block";
+}
+
+
     updateStats();
 
     answerInput.disabled = true;
