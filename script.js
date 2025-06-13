@@ -29,7 +29,7 @@ answerInput.addEventListener("keydown", function (e) {
     if (!answered) {
       checkAnswer();
     } else if (!nextBtn.disabled) {
-      nextBtn.click(); // Automatically go to next question if already answered correctly
+      nextBtn.click();
     }
   }
 });
@@ -79,7 +79,7 @@ function loadNextQuestion() {
   feedback.textContent = "";
   feedback.style.color = "black";
 
-  nextBtn.disabled = false;
+  nextBtn.disabled = true;
   tryAgainBtn.style.display = "none";
   answered = false;
 
@@ -94,6 +94,7 @@ function checkAnswer() {
   const correctAnswer = questions[currentQuestionIndex].en;
 
   if (userAnswer === correctAnswer) {
+    // ✅ CORRECT
     feedback.innerHTML = "✔️ <strong>Correct!</strong>";
     feedback.style.color = "green";
     combo++;
@@ -107,38 +108,28 @@ function checkAnswer() {
     nextBtn.disabled = false;
     tryAgainBtn.style.display = "none";
   } else {
-  const user = answerInput.value.trim();
-  const correct = questions[currentQuestionIndex].en;
+    // ❌ INCORRECT
+    let comparison = "";
+    const maxLength = Math.max(userAnswer.length, correctAnswer.length);
 
-  let comparison = "";
-  const maxLength = Math.max(user.length, correct.length);
+    for (let i = 0; i < maxLength; i++) {
+      const userChar = userAnswer[i] || "";
+      const correctChar = correctAnswer[i] || "";
 
-  for (let i = 0; i < maxLength; i++) {
-    const userChar = user[i] || "";
-    const correctChar = correct[i] || "";
-
-    if (userChar === correctChar) {
-      comparison += `<span style="color: green;">${correctChar}</span>`;
-    } else if (userChar && correctChar) {
-      comparison += `<span style="color: red;">${userChar}</span>`;
-    } else if (!userChar) {
-      comparison += `<span style="color: gray;">_</span>`;
+      if (userChar === correctChar) {
+        comparison += `<span style="color: green;">${correctChar}</span>`;
+      } else if (userChar && correctChar) {
+        comparison += `<span style="color: red;">${userChar}</span>`;
+      } else if (!userChar) {
+        comparison += `<span style="color: gray;">_</span>`;
+      }
     }
-  }
 
-  feedback.innerHTML = `✖️ <strong>Wrong!</strong><br>
+    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br>
 Your answer: <code>${comparison}</code><br>
-Correct answer: <span style="color: green;">${correct}</span>`;
-  feedback.style.color = "red";
-  combo = 0;
-
-  updateStats();
-
-  answerInput.disabled = true;
-  nextBtn.disabled = true;
-  tryAgainBtn.style.display = "inline-block";
-}
-
+Correct answer: <span style="color: green;">${correctAnswer}</span>`;
+    feedback.style.color = "red";
+    combo = 0;
 
     updateStats();
 
@@ -146,7 +137,7 @@ Correct answer: <span style="color: green;">${correct}</span>`;
     nextBtn.disabled = true;
     tryAgainBtn.style.display = "inline-block";
   }
-
+}
 
 function tryAgain() {
   feedback.textContent = "";
