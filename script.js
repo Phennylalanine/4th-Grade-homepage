@@ -104,7 +104,7 @@ function checkAnswer() {
     gainXP(1);
     showFloatingXP("+1 XP");
     updateStats();
-    triggerConfetti();
+   
 
     answerInput.disabled = true;
     nextBtn.disabled = false;
@@ -153,6 +153,7 @@ function tryAgain() {
 }
 
 function gainXP(amount) {
+  let levelBefore = level;
   xp += amount;
 
   while (xp >= xpToNextLevel(level)) {
@@ -161,8 +162,14 @@ function gainXP(amount) {
     feedback.innerHTML += `<br>🎉 Level Up! You are now level ${level}`;
   }
 
+  if (level > levelBefore) {
+    triggerConfetti(); // 🎉 Only happens when level increases
+  }
+
   saveProgress(); // ✅ Save progress when XP changes
   updateStats();
+}
+
 }
 
 function xpToNextLevel(currentLevel) {
