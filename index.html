@@ -49,10 +49,17 @@
     margin-top: 1.5rem;
     font-size: 1rem;
   }
+  #xpText {
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    margin-bottom: 0.2rem;
+    color: #333;
+    font-weight: bold;
+  }
   #xpBarContainer {
     background-color: #ddd;
     border-radius: 12px;
-    margin: 1rem auto;
+    margin: 0.3rem auto 1rem auto;
     width: 90%;
     height: 20px;
     overflow: hidden;
@@ -109,9 +116,12 @@
   <button id="nextBtn" disabled>Next</button>
   <button id="tryAgainBtn" style="display:none;">Try Again</button>
 
+  <!-- XP Text Display -->
+  <div id="xpText">0 / 10 XP</div>
   <div id="xpBarContainer">
     <div id="xpBar"></div>
   </div>
+
   <div id="stats">
     <div>Points: <span id="points">0</span></div>
     <div>Combo: <span id="combo">0</span></div>
