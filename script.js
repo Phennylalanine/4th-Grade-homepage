@@ -170,7 +170,6 @@ function gainXP(amount) {
   updateStats();
 }
 
-}
 
 function xpToNextLevel(currentLevel) {
   let xpRequired = 3;
