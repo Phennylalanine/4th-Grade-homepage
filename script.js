@@ -36,6 +36,9 @@ answerInput.addEventListener("keydown", function (e) {
 
 tryAgainBtn.addEventListener("click", tryAgain);
 
+// ✅ Load progress on page load
+loadProgress();
+
 function startQuiz() {
   document.getElementById("startScreen").classList.remove("active");
   document.getElementById("quizScreen").classList.add("active");
@@ -94,7 +97,6 @@ function checkAnswer() {
   const correctAnswer = questions[currentQuestionIndex].en;
 
   if (userAnswer === correctAnswer) {
-    // ✅ CORRECT
     feedback.innerHTML = "✔️ <strong>Correct!</strong>";
     feedback.style.color = "green";
     combo++;
@@ -108,7 +110,6 @@ function checkAnswer() {
     nextBtn.disabled = false;
     tryAgainBtn.style.display = "none";
   } else {
-    // ❌ INCORRECT
     let comparison = "";
     const maxLength = Math.max(userAnswer.length, correctAnswer.length);
 
@@ -157,8 +158,10 @@ function gainXP(amount) {
   while (xp >= xpToNextLevel(level)) {
     xp -= xpToNextLevel(level);
     level++;
+    feedback.innerHTML += `<br>🎉 Level Up! You are now level ${level}`;
   }
 
+  saveProgress(); // ✅ Save progress when XP changes
   updateStats();
 }
 
@@ -177,6 +180,22 @@ function updateStats() {
 
   const percent = (xp / xpToNextLevel(level)) * 100;
   xpBar.style.width = `${Math.min(percent, 100)}%`;
+}
+
+// ✅ SAVE / LOAD FUNCTIONS
+function saveProgress() {
+  localStorage.setItem("vocab_quiz_xp", xp);
+  localStorage.setItem("vocab_quiz_level", level);
+}
+
+function loadProgress() {
+  const savedXP = localStorage.getItem("vocab_quiz_xp");
+  const savedLevel = localStorage.getItem("vocab_quiz_level");
+
+  if (savedXP !== null) xp = parseInt(savedXP, 10);
+  if (savedLevel !== null) level = parseInt(savedLevel, 10);
+
+  updateStats();
 }
 
 function shuffleArray(array) {
