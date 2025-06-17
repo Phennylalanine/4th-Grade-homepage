@@ -197,13 +197,13 @@ function updateStats() {
 
 // ✅ SAVE / LOAD FUNCTIONS
 function saveProgress() {
-  localStorage.setItem("vocab_quiz_xp", xp);
-  localStorage.setItem("vocab_quiz_level", level);
+  localStorage.setItem("day_quiz_xp", xp);
+  localStorage.setItem("day_quiz_level", level);
 }
 
 function loadProgress() {
-  const savedXP = localStorage.getItem("vocab_quiz_xp");
-  const savedLevel = localStorage.getItem("vocab_quiz_level");
+  const savedXP = localStorage.getItem("day_quiz_xp");
+  const savedLevel = localStorage.getItem("day_quiz_level");
 
   if (savedXP !== null) xp = parseInt(savedXP, 10);
   if (savedLevel !== null) level = parseInt(savedLevel, 10);
