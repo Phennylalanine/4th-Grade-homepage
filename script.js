@@ -3,8 +3,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Add all your quiz keys here
   const quizKeys = [
-    "events_level",
-    "buildings_level",
+    "day_quiz_level",
+    "weather_quiz_level",
     // Replace with your actual key names
   ];
 
