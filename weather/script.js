@@ -58,14 +58,13 @@ function startQuiz() {
 }
 
 function parseCSV(data) {
-  return data
-    .trim()
-    .split("\n")
-    .map((line) => {
-      const [jp, en] = line.split(",");
-      return { jp: jp.trim(), en: en.trim() };
-    });
+  const lines = data.trim().split("\n");
+  return lines.slice(1).map((line) => {
+    const [jp, en] = line.split(",");
+    return { jp: jp.trim(), en: en.trim() };
+  });
 }
+
 
 function loadNextQuestion() {
   if (currentQuestionIndex >= questions.length) {
@@ -197,8 +196,8 @@ function updateStats() {
 
 // ✅ SAVE / LOAD FUNCTIONS
 function saveProgress() {
-  localStorage.setItem("weather_quiz_xp", xp);
-  localStorage.setItem("weather_quiz_level", level);
+  localStorage.setItem("day_quiz_xp", xp);
+  localStorage.setItem("day_quiz_level", level);
 }
 
 function loadProgress() {
@@ -220,7 +219,7 @@ function shuffleArray(array) {
 
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
+  utterance.lang = "en-UK";
   speechSynthesis.speak(utterance);
 }
 
