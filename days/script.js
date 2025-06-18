@@ -58,14 +58,13 @@ function startQuiz() {
 }
 
 function parseCSV(data) {
-  return data
-    .trim()
-    .split("\n")
-    .map((line) => {
-      const [jp, en] = line.split(",");
-      return { jp: jp.trim(), en: en.trim() };
-    });
+  const lines = data.trim().split("\n");
+  return lines.slice(1).map((line) => {
+    const [jp, en] = line.split(",");
+    return { jp: jp.trim(), en: en.trim() };
+  });
 }
+
 
 function loadNextQuestion() {
   if (currentQuestionIndex >= questions.length) {
