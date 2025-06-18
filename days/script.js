@@ -73,21 +73,46 @@ function loadNextQuestion() {
   }
 
   const question = questions[currentQuestionIndex];
-  jpText.textContent = question.jp;
-  enText.textContent = question.en;
+  const correctAnswer = question.en;
 
+  jpText.textContent = question.jp;
+  speak(correctAnswer); // Optional speech
+
+  // Get 3 wrong answers
+  const wrongAnswers = questions
+    .filter(q => q.en !== correctAnswer)
+    .map(q => q.en);
+  shuffleArray(wrongAnswers);
+
+  // Combine and shuffle
+  const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
+  shuffleArray(options);
+
+  // Display text options
+  const choicesContainer = document.getElementById("choicesText");
+  choicesContainer.innerHTML = ""; // Clear previous choices
+
+  options.forEach(opt => {
+    const span = document.createElement("span");
+    span.textContent = opt;
+    span.style.margin = "0 10px";
+    span.style.padding = "5px 10px";
+    span.style.border = "1px solid #ccc";
+    span.style.borderRadius = "5px";
+    span.style.background = "#fff";
+    span.style.fontWeight = "bold";
+    choicesContainer.appendChild(span);
+  });
+
+  // Reset input and UI
   answerInput.value = "";
   answerInput.disabled = false;
   answerInput.focus();
 
   feedback.textContent = "";
-  feedback.style.color = "black";
-
   nextBtn.disabled = true;
   tryAgainBtn.style.display = "none";
   answered = false;
-
-  speak(question.en);
 }
 
 function checkAnswer() {
