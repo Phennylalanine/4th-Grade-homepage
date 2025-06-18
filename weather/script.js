@@ -197,8 +197,8 @@ function updateStats() {
 
 // ✅ SAVE / LOAD FUNCTIONS
 function saveProgress() {
-  localStorage.setItem("day_quiz_xp", xp);
-  localStorage.setItem("day_quiz_level", level);
+  localStorage.setItem("weather_quiz_xp", xp);
+  localStorage.setItem("weather_quiz_level", level);
 }
 
 function loadProgress() {
