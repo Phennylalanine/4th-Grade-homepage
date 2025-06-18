@@ -22,6 +22,11 @@ const xpBar = document.getElementById("xpBar");
 const xpText = document.getElementById("xpText");
 const choicesContainer = document.getElementById("choicesText");
 
+// Added confetti canvas and context
+const confettiCanvas = document.getElementById("confettiCanvas");
+const ctx = confettiCanvas.getContext("2d");
+const confettiParticles = [];
+
 document.getElementById("startBtn").addEventListener("click", startQuiz);
 nextBtn.addEventListener("click", () => {
   currentQuestionIndex++;
