@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>English-Japanese Quiz</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 1rem;
+    text-align: center;
+  }
+  #startScreen, #quizScreen {
+    display: none;
+  }
+  #startScreen.active, #quizScreen.active {
+    display: block;
+  }
+  #question {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  #jpText {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  #enText {
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  input[type="text"] {
+    font-size: 1.25rem;
+    padding: 0.4rem;
+    width: 60%;
+  }
+  button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+  }
+  #feedback {
+    margin-top: 0.5rem;
+    color: red;
+    min-height: 1.5em;
+  }
+  #stats {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+  }
+  #xpText {
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    margin-bottom: 0.2rem;
+    color: #333;
+    font-weight: bold;
+  }
+  #xpBarContainer {
+    background-color: #ddd;
+    border-radius: 12px;
+    margin: 0.3rem auto 1rem auto;
+    width: 90%;
+    height: 20px;
+    overflow: hidden;
+  }
+  #xpBar {
+    background-color: #4caf50;
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+  .floating-xp {
+    position: fixed;
+    color: #4caf50;
+    font-weight: bold;
+    animation: floatUp 1.5s ease forwards;
+    user-select: none;
+    pointer-events: none;
+  }
+  @keyframes floatUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-50px);
+    }
+  }
+  canvas {
+    position: fixed;
+    pointer-events: none;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+  }
+</style>
+</head>
+<body>
+
+<div id="startScreen" class="active">
+  <h1>English-Japanese Quiz</h1>
+  <p>Press Start to begin the quiz.<br />You will hear the English word spoken automatically.</p>
+  <button id="startBtn">Start Quiz</button>
+</div>
+
+<div id="quizScreen">
+  <div id="question">
+    <div id="jpText"></div>
+    <div id="enText"></div>
+  </div>
+  <input type="text" id="answerInput" autocomplete="off" />
+  <div id="feedback"></div>
+  <button id="nextBtn" disabled>Next</button>
+  <button id="tryAgainBtn" style="display:none;">Try Again</button>
+
+  <!-- XP Text Display -->
+  <div id="xpText">0 / 10 XP</div>
+  <div id="xpBarContainer">
+    <div id="xpBar"></div>
+  </div>
+
+  <div id="stats">
+    <div>Points: <span id="points">0</span></div>
+    <div>Combo: <span id="combo">0</span></div>
+    <div>Level: <span id="level">1</span></div>
+  </div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+<script src="script.js"></script>
+</body>
+</html>
