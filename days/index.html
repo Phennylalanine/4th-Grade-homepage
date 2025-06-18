@@ -60,27 +60,18 @@
   <div id="quizScreen">
     <div id="jpText">月曜日</div>
 
+    <!-- Added missing choicesText container -->
+    <div id="choicesText" style="margin: 20px 0;"></div>
+
     <input type="text" id="answerInput" autocomplete="off" placeholder="Type the correct English" />
     <div id="feedback"></div>
     <button id="nextBtn" disabled>Next</button>
     <button id="tryAgainBtn" style="display:none;">Try Again</button>
   </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const startScreen = document.getElementById("startScreen");
-      const quizScreen = document.getElementById("quizScreen");
-      const startBtn = document.getElementById("startBtn");
+  <!-- Removed duplicate DOMContentLoaded script -->
 
-      startBtn.addEventListener("click", () => {
-        console.log("Start button clicked!");
-        startScreen.classList.remove("active");
-        quizScreen.classList.add("active");
-        // For demo, just update jpText and focus input
-        document.getElementById("jpText").textContent = "月曜日";
-        document.getElementById("answerInput").focus();
-      });
-    });
-  </script>
+  <!-- Added confetti canvas -->
+  <canvas id="confettiCanvas" style="position:fixed; top:0; left:0; pointer-events:none; z-index:1000;"></canvas>
 </body>
 </html>
