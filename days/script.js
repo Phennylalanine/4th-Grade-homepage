@@ -19,7 +19,8 @@ const pointsEl = document.getElementById("points");
 const comboEl = document.getElementById("combo");
 const levelEl = document.getElementById("level");
 const xpBar = document.getElementById("xpBar");
-const xpText = document.getElementById("xpText"); // 👈 New element for XP fraction
+const xpText = document.getElementById("xpText");
+const choicesContainer = document.getElementById("choicesText");
 
 document.getElementById("startBtn").addEventListener("click", startQuiz);
 nextBtn.addEventListener("click", () => {
@@ -38,7 +39,6 @@ answerInput.addEventListener("keydown", function (e) {
 
 tryAgainBtn.addEventListener("click", tryAgain);
 
-// ✅ Load progress on page load
 loadProgress();
 
 function startQuiz() {
@@ -65,7 +65,6 @@ function parseCSV(data) {
   });
 }
 
-
 function loadNextQuestion() {
   if (currentQuestionIndex >= questions.length) {
     currentQuestionIndex = 0;
@@ -73,166 +72,115 @@ function loadNextQuestion() {
   }
 
   const question = questions[currentQuestionIndex];
-  const correctAnswer = question.en;
-
   jpText.textContent = question.jp;
-  speak(correctAnswer); // Optional speech
+  enText.textContent = question.en; // optional display for debugging
 
-  // Get 3 wrong answers
-  const wrongAnswers = questions
-    .filter(q => q.en !== correctAnswer)
-    .map(q => q.en);
+  speak(question.en);
+
+  const correctAnswer = question.en;
+  const wrongAnswers = questions.filter(q => q.en !== correctAnswer).map(q => q.en);
   shuffleArray(wrongAnswers);
 
-  // Combine and shuffle
   const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
   shuffleArray(options);
 
-  // Display text options
-  const choicesContainer = document.getElementById("choicesText");
-  choicesContainer.innerHTML = ""; // Clear previous choices
-
+  choicesContainer.innerHTML = "";
   options.forEach(opt => {
     const span = document.createElement("span");
     span.textContent = opt;
-    span.style.margin = "0 10px";
+    span.className = "choice-option";
     span.style.padding = "5px 10px";
     span.style.border = "1px solid #ccc";
     span.style.borderRadius = "5px";
-    span.style.background = "#fff";
-    span.style.fontWeight = "bold";
+    span.style.background = "#f9f9f9";
+    span.style.margin = "5px";
+    span.style.userSelect = "none";
     choicesContainer.appendChild(span);
   });
 
-  // Reset input and UI
   answerInput.value = "";
   answerInput.disabled = false;
   answerInput.focus();
 
   feedback.textContent = "";
+  feedback.style.color = "black";
+
   nextBtn.disabled = true;
   tryAgainBtn.style.display = "none";
   answered = false;
 }
 
 function checkAnswer() {
-  if (answered) return;
-  answered = true;
-
   const userAnswer = answerInput.value.trim();
   const correctAnswer = questions[currentQuestionIndex].en;
+  answered = true;
+  answerInput.disabled = true;
 
-  if (userAnswer === correctAnswer) {
-    feedback.innerHTML = "✔️ <strong>Correct!</strong>";
+  if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+    feedback.textContent = "Correct!";
     feedback.style.color = "green";
+    gainXP(10);
+    score += 10;
     combo++;
-
-    score += 1; // ✅ Only 1 point per correct answer
-
-    // ✅ XP Calculation with Combo Bonus
-    const xpBonus = combo >= 15 && combo % 5 === 0 ? (combo / 5) - 1 : 1;
-    gainXP(xpBonus);
-    showFloatingXP(`+${xpBonus} XP`);
-
-    updateStats();
-
-    answerInput.disabled = true;
+    if (combo % maxComboForBonus === 0) gainXP(20);
+    showFloatingXP(10);
+    triggerConfetti();
     nextBtn.disabled = false;
-    tryAgainBtn.style.display = "none";
   } else {
-    let comparison = "";
-    const maxLength = Math.max(userAnswer.length, correctAnswer.length);
-
-    for (let i = 0; i < maxLength; i++) {
-      const userChar = userAnswer[i] || "";
-      const correctChar = correctAnswer[i] || "";
-
-      if (userChar === correctChar) {
-        comparison += `<span style="color: green;">${correctChar}</span>`;
-      } else if (userChar && correctChar) {
-        comparison += `<span style="color: red;">${userChar}</span>`;
-      } else if (!userChar) {
-        comparison += `<span style="color: gray;">_</span>`;
-      }
-    }
-
-    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br>
-Your answer: <code>${comparison}</code><br>
-Correct answer: <span style="color: green;">${correctAnswer}</span>`;
+    feedback.innerHTML = `Wrong!<br>Your answer: ${userAnswer}<br>Correct: ${correctAnswer}`;
     feedback.style.color = "red";
-    combo = 0;
-
-    updateStats();
-
-    answerInput.disabled = true;
-    nextBtn.disabled = true;
     tryAgainBtn.style.display = "inline-block";
+    combo = 0;
   }
+
+  updateStats();
 }
 
 function tryAgain() {
+  answerInput.value = "";
   feedback.textContent = "";
   feedback.style.color = "black";
   answerInput.disabled = false;
-  answerInput.value = "";
-  answerInput.focus();
-
   tryAgainBtn.style.display = "none";
-  nextBtn.disabled = true;
   answered = false;
+  answerInput.focus();
 }
 
 function gainXP(amount) {
-  let levelBefore = level;
   xp += amount;
-
-  while (xp >= xpToNextLevel(level)) {
-    xp -= xpToNextLevel(level);
+  while (xp >= xpToNextLevel()) {
+    xp -= xpToNextLevel();
     level++;
-    feedback.innerHTML += `<br>🎉 Level Up! You are now level ${level}`;
   }
-
-  if (level > levelBefore) {
-    triggerConfetti(); // 🎉 Only happens when level increases
-  }
-
-  saveProgress(); // ✅ Save progress when XP changes
   updateStats();
 }
 
-function xpToNextLevel(currentLevel) {
-  let xpRequired = 3;
-  for (let i = 2; i <= currentLevel; i++) {
-    xpRequired += i;
-  }
-  return xpRequired;
+function xpToNextLevel() {
+  return level * 50;
 }
 
 function updateStats() {
-  pointsEl.textContent = score;
-  comboEl.textContent = combo;
-  levelEl.textContent = level;
-
-  const needed = xpToNextLevel(level);
-  const percent = (xp / needed) * 100;
-  xpBar.style.width = `${Math.min(percent, 100)}%`;
-  xpText.textContent = `${xp} / ${needed}`; // ✅ Show XP as fraction
+  pointsEl.textContent = `Score: ${score}`;
+  comboEl.textContent = `Combo: ${combo}`;
+  levelEl.textContent = `Level: ${level}`;
+  xpBar.style.width = `${(xp / xpToNextLevel()) * 100}%`;
+  xpText.textContent = `${xp}/${xpToNextLevel()} XP`;
+  saveProgress();
 }
 
-// ✅ SAVE / LOAD FUNCTIONS
 function saveProgress() {
-  localStorage.setItem("day_quiz_xp", xp);
-  localStorage.setItem("day_quiz_level", level);
+  localStorage.setItem("quizProgress", JSON.stringify({ score, combo, level, xp }));
 }
 
 function loadProgress() {
-  const savedXP = localStorage.getItem("day_quiz_xp");
-  const savedLevel = localStorage.getItem("day_quiz_level");
-
-  if (savedXP !== null) xp = parseInt(savedXP, 10);
-  if (savedLevel !== null) level = parseInt(savedLevel, 10);
-
-  updateStats();
+  const saved = JSON.parse(localStorage.getItem("quizProgress"));
+  if (saved) {
+    score = saved.score;
+    combo = saved.combo;
+    level = saved.level;
+    xp = saved.xp;
+    updateStats();
+  }
 }
 
 function shuffleArray(array) {
@@ -244,7 +192,7 @@ function shuffleArray(array) {
 
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-UK";
+  utterance.lang = "en-US";
   speechSynthesis.speak(utterance);
 }
 
@@ -257,11 +205,6 @@ function showFloatingXP(text) {
   document.body.appendChild(xpElem);
   setTimeout(() => xpElem.remove(), 1500);
 }
-
-// Confetti effect
-const confettiCanvas = document.getElementById("confettiCanvas");
-const ctx = confettiCanvas.getContext("2d");
-let confettiParticles = [];
 
 function triggerConfetti() {
   for (let i = 0; i < 100; i++) {
