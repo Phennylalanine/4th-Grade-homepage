@@ -85,7 +85,7 @@ function loadNextQuestion() {
 
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
-  enText.textContent = question.en;
+  // Removed the line: enText.textContent = question.en;
 
   speak(question.en);
 
