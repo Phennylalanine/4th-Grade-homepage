@@ -78,7 +78,7 @@ function loadNextQuestion() {
 
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
-  enText.textContent = question.en; // optional display for debugging
+   // enText.textContent = question.en; // optional display for debugging
 
   speak(question.en);
 
