@@ -82,12 +82,6 @@
       background-color: #388e3c;
     }
 
-    #choicesText {
-      margin: 20px 0;
-      font-size: 1.1em;
-      color: #555;
-    }
-
     /* Stats Panel */
     #statsPanel {
       margin-bottom: 30px;
@@ -130,6 +124,34 @@
       font-size: 0.9em;
       color: #2e7d32;
       font-weight: 600;
+    }
+
+    /* Added styles for choices */
+    #choicesText {
+      margin: 20px 0;
+      font-size: 1.1em;
+      color: #555;
+      display: flex;          /* Arrange options in a row */
+      justify-content: center; /* Center horizontally */
+      flex-wrap: wrap;        /* Wrap if too many */
+      gap: 10px;              /* Space between options */
+    }
+
+    .choice-option {
+      cursor: default;
+      user-select: none;
+      padding: 8px 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f9f9f9;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .choice-option:hover {
+      background-color: #e0f2f1; /* subtle highlight on hover */
     }
   </style>
 </head>
