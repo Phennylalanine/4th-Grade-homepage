@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Japanese-English Quiz</title>
   <style>
+    /* Your existing styles (unchanged) */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f4f4;
@@ -131,10 +132,10 @@
       margin: 20px 0;
       font-size: 1.1em;
       color: #555;
-      display: flex;          /* Arrange options in a row */
-      justify-content: center; /* Center horizontally */
-      flex-wrap: wrap;        /* Wrap if too many */
-      gap: 10px;              /* Space between options */
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .choice-option {
@@ -151,7 +152,7 @@
     }
 
     .choice-option:hover {
-      background-color: #e0f2f1; /* subtle highlight on hover */
+      background-color: #e0f2f1;
     }
   </style>
 </head>
@@ -180,6 +181,9 @@
 
     <div id="jpText">月曜日</div>
     <div id="choicesText"></div>
+
+    <!-- Hidden English text element for JS -->
+    <div id="enText" style="display:none;"></div>
 
     <input type="text" id="answerInput" autocomplete="off" placeholder="Type the correct English" />
     <div id="feedback"></div>
