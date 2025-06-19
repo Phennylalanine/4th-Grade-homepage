@@ -26,6 +26,12 @@
       font-weight: bold;
       color: #2c3e50;
     }
+ #epText {
+      font-size: 2.5em;
+      margin-bottom: 25px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
 
     #answerInput {
       padding: 12px 15px;
