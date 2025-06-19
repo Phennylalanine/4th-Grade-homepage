@@ -28,10 +28,14 @@ const ctx = confettiCanvas.getContext("2d");
 const confettiParticles = [];
 
 document.getElementById("startBtn").addEventListener("click", startQuiz);
+
 nextBtn.addEventListener("click", () => {
-  currentQuestionIndex++;
-  loadNextQuestion();
+  if (answered) {
+    currentQuestionIndex++;
+    loadNextQuestion();
+  }
 });
+
 answerInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter") {
     if (!answered) {
