@@ -9,37 +9,46 @@
 
 <body>
 
+<h1>Japanese-English Quiz</h1>
+
 <div id="startScreen" class="active">
-  <h1>English-Japanese Quiz</h1>
-  <p>Press Start to begin the quiz.<br />You will hear the English word spoken automatically.</p>
   <button id="startBtn">Start Quiz</button>
 </div>
 
 <div id="quizScreen">
-  <div id="question">
-    <div id="jpText"></div>
-    <div id="enText"></div>
+  <!-- Stats Panel (Level, XP bar, score, combo) -->
+  <div id="statsPanel">
+    <div class="level-section">
+      <div>
+        <strong>Level:</strong> <span id="level">1</span>
+      </div>
+      <div id="xpBarContainer" aria-label="Experience Progress Bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+        <div id="xpBar"></div>
+      </div>
+      <small id="xpText">0 / 10 XP</small>
+    </div>
+    <div>
+      <strong>Score:</strong> <span id="points">0</span> |
+      <strong>Combo:</strong> <span id="combo">0</span>
+    </div>
   </div>
-  <input type="text" id="answerInput" autocomplete="off" />
+
+  <!-- Question Text -->
+  <div id="jpText">月曜日</div>
+  <div id="enText" style="display:none;"></div>
+
+  <!-- Answer Input -->
+  <input type="text" id="answerInput" autocomplete="off" placeholder="Type the correct English" />
   <div id="feedback"></div>
+
+  <!-- Buttons -->
   <button id="nextBtn" disabled>Next</button>
   <button id="tryAgainBtn" style="display:none;">Try Again</button>
-
-  <!-- XP Text Display -->
-  <div id="xpText">0 / 10 XP</div>
-  <div id="xpBarContainer">
-    <div id="xpBar"></div>
-  </div>
-
-  <div id="stats">
-    <div>Points: <span id="points">0</span></div>
-    <div>Combo: <span id="combo">0</span></div>
-    <div>Level: <span id="level">1</span></div>
-  </div>
 </div>
 
-<canvas id="confettiCanvas"></canvas>
+<canvas id="confettiCanvas" style="position:fixed; top:0; left:0; pointer-events:none; z-index:1000;"></canvas>
 
 <script src="script.js"></script>
 </body>
+
 </html>
