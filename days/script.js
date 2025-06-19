@@ -1,4 +1,3 @@
-// ... your existing variables ...
 let currentQuestionIndex = 0;
 let score = 0;
 let combo = 0;
@@ -10,19 +9,19 @@ let answered = false;
 const maxComboForBonus = 5;
 
 const jpText = document.getElementById("jpText");
-const enText = document.getElementById("enText");
+// const enText = document.getElementById("enText"); // Optional
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
 const tryAgainBtn = document.getElementById("tryAgainBtn");
-const pointsEl = document.getElementById("points");
-const comboEl = document.getElementById("combo");
-const levelEl = document.getElementById("level");
-const xpBar = document.getElementById("xpBar");
-const xpText = document.getElementById("xpText");
 const choicesContainer = document.getElementById("choicesText");
 
-// Added confetti canvas and context
+const pointsEl = document.getElementById("points") || { textContent: '' };
+const comboEl = document.getElementById("combo") || { textContent: '' };
+const levelEl = document.getElementById("level") || { textContent: '' };
+const xpBar = document.getElementById("xpBar") || { style: { width: '0%' } };
+const xpText = document.getElementById("xpText") || { textContent: '' };
+
 const confettiCanvas = document.getElementById("confettiCanvas");
 const ctx = confettiCanvas.getContext("2d");
 const confettiParticles = [];
@@ -82,12 +81,13 @@ function loadNextQuestion() {
 
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
-   // enText.textContent = question.en; // optional display for debugging
 
   speak(question.en);
 
   const correctAnswer = question.en;
-  const wrongAnswers = questions.filter(q => q.en !== correctAnswer).map(q => q.en);
+  const wrongAnswers = questions
+    .filter(q => q.en !== correctAnswer)
+    .map(q => q.en);
   shuffleArray(wrongAnswers);
 
   const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
@@ -132,7 +132,7 @@ function checkAnswer() {
     score += 10;
     combo++;
     if (combo % maxComboForBonus === 0) gainXP(20);
-    showFloatingXP(10);
+    showFloatingXP("+10 XP");
     triggerConfetti();
     nextBtn.disabled = false;
   } else {
@@ -209,8 +209,12 @@ function showFloatingXP(text) {
   const xpElem = document.createElement("div");
   xpElem.textContent = text;
   xpElem.className = "floating-xp";
+  xpElem.style.position = "absolute";
+  xpElem.style.color = "#2e8b57";
+  xpElem.style.fontSize = "1.2em";
   xpElem.style.left = `${Math.random() * 80 + 10}%`;
   xpElem.style.top = "50%";
+  xpElem.style.zIndex = "10000";
   document.body.appendChild(xpElem);
   setTimeout(() => xpElem.remove(), 1500);
 }
@@ -244,7 +248,6 @@ function updateConfetti() {
     const p = confettiParticles[i];
     p.y += p.d;
     p.x += Math.sin(p.tilt) * 2;
-
     if (p.y > confettiCanvas.height) {
       confettiParticles.splice(i, 1);
       i--;
