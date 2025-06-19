@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Japanese-English Quiz</title>
   <style>
-    /* Your existing styles (unchanged) */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f4f4;
@@ -98,13 +97,20 @@
       color: #2c3e50;
     }
 
+    .level-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     /* XP Bar Container */
     #xpBarContainer {
       width: 240px;
       height: 16px;
       background: #ddd;
       border-radius: 10px;
-      margin: 6px auto 0 auto;
+      margin: 6px 0 0 0;
       overflow: hidden;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
     }
@@ -127,7 +133,6 @@
       font-weight: 600;
     }
 
-    /* Added styles for choices */
     #choicesText {
       margin: 20px 0;
       font-size: 1.1em;
@@ -166,13 +171,15 @@
   <div id="quizScreen">
     <!-- Stats Panel -->
     <div id="statsPanel">
-      <div>
-        <strong>Level:</strong> <span id="level">1</span>
+      <div class="level-section">
+        <div>
+          <strong>Level:</strong> <span id="level">1</span>
+        </div>
+        <div id="xpBarContainer" aria-label="Experience Progress Bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+          <div id="xpBar"></div>
+        </div>
+        <small id="xpText">0 / 3 XP</small>
       </div>
-      <div id="xpBarContainer" aria-label="Experience Progress Bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-        <div id="xpBar"></div>
-      </div>
-      <small id="xpText">0 / 3 XP</small>
       <div>
         <strong>Score:</strong> <span id="points">0</span> |
         <strong>Combo:</strong> <span id="combo">0</span>
