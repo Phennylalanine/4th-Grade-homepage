@@ -1,4 +1,4 @@
-// ... your existing variables ...
+// Quiz State Variables
 let currentQuestionIndex = 0;
 let score = 0;
 let combo = 0;
@@ -9,23 +9,35 @@ let answered = false;
 
 const maxComboForBonus = 5;
 
+// DOM Elements
 const jpText = document.getElementById("jpText");
 const enText = document.getElementById("enText");
 const answerInput = document.getElementById("answerInput");
 const feedback = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
 const tryAgainBtn = document.getElementById("tryAgainBtn");
+const choicesContainer = document.getElementById("choicesText");
+
 const pointsEl = document.getElementById("points");
 const comboEl = document.getElementById("combo");
 const levelEl = document.getElementById("level");
 const xpBar = document.getElementById("xpBar");
-const xpText = document.getElementById("xpText"); // 👈 New element for XP fraction
+const xpText = document.getElementById("xpText");
 
+// Confetti
+const confettiCanvas = document.getElementById("confettiCanvas");
+const ctx = confettiCanvas.getContext("2d");
+let confettiParticles = [];
+
+// Event Listeners
 document.getElementById("startBtn").addEventListener("click", startQuiz);
 nextBtn.addEventListener("click", () => {
-  currentQuestionIndex++;
-  loadNextQuestion();
+  if (answered) {
+    currentQuestionIndex++;
+    loadNextQuestion();
+  }
 });
+
 answerInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter") {
     if (!answered) {
@@ -38,7 +50,7 @@ answerInput.addEventListener("keydown", function (e) {
 
 tryAgainBtn.addEventListener("click", tryAgain);
 
-// ✅ Load progress on page load
+// Load progress
 loadProgress();
 
 function startQuiz() {
@@ -65,7 +77,6 @@ function parseCSV(data) {
   });
 }
 
-
 function loadNextQuestion() {
   if (currentQuestionIndex >= questions.length) {
     currentQuestionIndex = 0;
@@ -75,6 +86,29 @@ function loadNextQuestion() {
   const question = questions[currentQuestionIndex];
   jpText.textContent = question.jp;
   enText.textContent = question.en;
+
+  speak(question.en);
+
+  const correctAnswer = question.en;
+  const wrongAnswers = questions.filter(q => q.en !== correctAnswer).map(q => q.en);
+  shuffleArray(wrongAnswers);
+
+  const options = [correctAnswer, ...wrongAnswers.slice(0, 3)];
+  shuffleArray(options);
+
+  choicesContainer.innerHTML = "";
+  options.forEach(opt => {
+    const span = document.createElement("span");
+    span.textContent = opt;
+    span.className = "choice-option";
+    span.style.padding = "5px 10px";
+    span.style.border = "1px solid #ccc";
+    span.style.borderRadius = "5px";
+    span.style.background = "#f9f9f9";
+    span.style.margin = "5px";
+    span.style.userSelect = "none";
+    choicesContainer.appendChild(span);
+  });
 
   answerInput.value = "";
   answerInput.disabled = false;
@@ -86,8 +120,6 @@ function loadNextQuestion() {
   nextBtn.disabled = true;
   tryAgainBtn.style.display = "none";
   answered = false;
-
-  speak(question.en);
 }
 
 function checkAnswer() {
@@ -101,10 +133,8 @@ function checkAnswer() {
     feedback.innerHTML = "✔️ <strong>Correct!</strong>";
     feedback.style.color = "green";
     combo++;
+    score += 1;
 
-    score += 1; // ✅ Only 1 point per correct answer
-
-    // ✅ XP Calculation with Combo Bonus
     const xpBonus = combo >= 15 && combo % 5 === 0 ? (combo / 5) - 1 : 1;
     gainXP(xpBonus);
     showFloatingXP(`+${xpBonus} XP`);
@@ -131,9 +161,7 @@ function checkAnswer() {
       }
     }
 
-    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br>
-Your answer: <code>${comparison}</code><br>
-Correct answer: <span style="color: green;">${correctAnswer}</span>`;
+    feedback.innerHTML = `✖️ <strong>Wrong!</strong><br>Your answer: <code>${comparison}</code><br>Correct answer: <span style="color: green;">${correctAnswer}</span>`;
     feedback.style.color = "red";
     combo = 0;
 
@@ -168,10 +196,10 @@ function gainXP(amount) {
   }
 
   if (level > levelBefore) {
-    triggerConfetti(); // 🎉 Only happens when level increases
+    triggerConfetti();
   }
 
-  saveProgress(); // ✅ Save progress when XP changes
+  saveProgress();
   updateStats();
 }
 
@@ -191,10 +219,9 @@ function updateStats() {
   const needed = xpToNextLevel(level);
   const percent = (xp / needed) * 100;
   xpBar.style.width = `${Math.min(percent, 100)}%`;
-  xpText.textContent = `${xp} / ${needed}`; // ✅ Show XP as fraction
+  xpText.textContent = `${xp} / ${needed}`;
 }
 
-// ✅ SAVE / LOAD FUNCTIONS
 function saveProgress() {
   localStorage.setItem("day_quiz_xp", xp);
   localStorage.setItem("day_quiz_level", level);
@@ -232,11 +259,6 @@ function showFloatingXP(text) {
   document.body.appendChild(xpElem);
   setTimeout(() => xpElem.remove(), 1500);
 }
-
-// Confetti effect
-const confettiCanvas = document.getElementById("confettiCanvas");
-const ctx = confettiCanvas.getContext("2d");
-let confettiParticles = [];
 
 function triggerConfetti() {
   for (let i = 0; i < 100; i++) {
