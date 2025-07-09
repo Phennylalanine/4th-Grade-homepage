@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz Hub - Overall Level</title>
+  <title>4th Grade Quiz Hub - Overall Level</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -28,25 +28,61 @@
     }
     li {
       margin: 10px 0;
+      font-size: 1.2em;
     }
     a {
       text-decoration: none;
       color: #0066cc;
-      font-size: 1.2em;
     }
     a:hover {
       text-decoration: underline;
+    }
+    .levelValue {
+      font-weight: bold;
+      color: #0066cc;
+      margin-left: 8px;
+      font-size: 1em;
     }
   </style>
 </head>
 <body>
   <h1>Welcome to the Quiz Hub!</h1>
-  <p id="overallLevel">Loading overall level...</p>
+  <p id="overallLevel"></p>
 
   <ul>
-    <li><a href="https://phennylalanine.github.io/4th-Grade-homepage/dayssingle/" target="_blank" rel="noopener noreferrer">Day Quiz - 曜日クイズ</a></li>
-    <li><a href="https://phennylalanine.github.io/4th-Grade-homepage/weather" target="_blank" rel="noopener noreferrer">Weather Quiz - 天気クイズ</a></li>
- 
+    <li>
+ <a href="https://phennylalanine.github.io/Yach-5-Quiz-Home/alphabetTyping" target="_blank" rel="noopener noreferrer">
+        Alphabet Keyboard Practice - キーボードの練習
+    <span class="levelValue" data-key="TypingLevel_Level1">(Round 1 Level: 0)</span>
+ <span class="levelValue" data-key="TypingLevel_Level2">(Round 2 Level: 0)</span>
+      </a>
+</li>
+      
+      <a href="https://phennylalanine.github.io/Yach-5-Quiz-Home/MonthsS" target="_blank" rel="noopener noreferrer">
+        Round 1 Months Quiz - 月クイズ
+      </a>
+      <span class="levelValue" data-key="monthsSlevel">(Level: 0)</span>
+    </li>
+    <li>
+      <a href="https://phennylalanine.github.io/Yach-5-Quiz-Home/MonthsM" target="_blank" rel="noopener noreferrer">
+        Round 2 Months Quiz - 月クイズ
+      </a>
+      <span class="levelValue" data-key="monthsMlevel">(Level: 0)</span>
+    </li>
+    <li>
+      <a href="https://phennylalanine.github.io/Yach-5-Quiz-Home/EventS" target="_blank" rel="noopener noreferrer">
+        Round 1 Activities Quiz - アクティビティクイズ
+      </a>
+      <span class="levelValue" data-key="EventSlevel">(Level: 0)</span>
+    </li>
+    <li>
+      <a href="https://phennylalanine.github.io/Yach-5-Quiz-Home/EventM" target="_blank" rel="noopener noreferrer">
+        Round 2 Activities Quiz - アクティビティクイズ
+      </a>
+      <span class="levelValue" data-key="EventMlevel">(Level: 0)</span>
+    </li>
+  </ul>
+
   <script src="script.js"></script>
 </body>
 </html>
