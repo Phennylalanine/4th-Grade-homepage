@@ -1,0 +1,67 @@
+/* Achievement Panel Styles */
+#achievement-tab {
+  position: fixed;
+  top: 40%;
+  right: 0;
+  background: #4a90e2;
+  color: white;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 10px 5px;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
+  z-index: 1001;
+  font-family: sans-serif;
+  font-size: 20px;
+  box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
+}
+
+#achievement-panel {
+  position: fixed;
+  top: 0;
+  right: -350px;
+  width: 320px;
+  height: 100vh;
+  background: #fafbfc;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.18);
+  border-left: 2px solid #eaecef;
+  z-index: 1000;
+  transition: right 0.3s;
+  padding: 24px 16px;
+  overflow-y: auto;
+  font-family: sans-serif;
+}
+
+#achievement-panel.open {
+  right: 0;
+}
+
+.achieve-section {
+  margin-bottom: 28px;
+}
+
+.achieve-title {
+  font-size: 1.2em;
+  margin-bottom: 6px;
+  color: #2d3a4a;
+  font-weight: bold;
+}
+
+.achieve-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.achieve-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 1em;
+}
+
+.achieve-got {
+  color: #27ae60;
+  font-weight: bold;
+}
