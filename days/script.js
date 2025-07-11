@@ -141,6 +141,12 @@ function checkAnswer() {
 
     updateStats();
 
+    // === ACHIEVEMENT UPDATE: call after correct answer & stat update ===
+    if (typeof updateQuizAchievements === "function") {
+      updateQuizAchievements('DayQuiz', {score: score, combo: combo, level: level});
+    }
+    // === END ACHIEVEMENT UPDATE ===
+
     answerInput.disabled = true;
     nextBtn.disabled = false;
     tryAgainBtn.style.display = "none";
@@ -197,6 +203,12 @@ function gainXP(amount) {
 
   if (level > levelBefore) {
     triggerConfetti();
+
+    // === ACHIEVEMENT UPDATE: ensure level achievements are always tracked ===
+    if (typeof updateQuizAchievements === "function") {
+      updateQuizAchievements('DayQuiz', {score: score, combo: combo, level: level});
+    }
+    // === END ACHIEVEMENT UPDATE ===
   }
 
   saveProgress();
