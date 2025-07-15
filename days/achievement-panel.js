@@ -5,6 +5,34 @@ const achievementMilestones = {
   levels: [5, 10, 25, 50]
 };
 
+// Achievement definitions (for tooltip text)
+const achievementDefinitions = [
+  // Scores
+  ...achievementMilestones.scores.map(m => ({
+    key: `score-${m}`,
+    type: 'score',
+    value: m,
+    label: `Score ${m}`,
+    desc: `Get a total score of ${m} or more in this quiz.`
+  })),
+  // Combos
+  ...achievementMilestones.combos.map(m => ({
+    key: `combo-${m}`,
+    type: 'combo',
+    value: m,
+    label: `Combo ${m}`,
+    desc: `Achieve a combo streak of ${m} or more correct answers.`
+  })),
+  // Levels
+  ...achievementMilestones.levels.map(m => ({
+    key: `level-${m}`,
+    type: 'level',
+    value: m,
+    label: `Level ${m}`,
+    desc: `Reach level ${m}.`
+  })),
+];
+
 // Helper: load and save to localStorage
 function getAchievements() {
   return JSON.parse(localStorage.getItem('quizAchievements') || '{}');
@@ -39,25 +67,36 @@ function renderAchievementPanel() {
   const panel = document.getElementById('achievement-panel-content');
   if (!panel) return;
 
+  // Use icon grid per quiz
   let html = '';
-  Object.keys(data).forEach(quiz => {
-    html += `<div class="achieve-section">
-      <div class="achieve-title">${quiz}</div>
-      <ul class="achieve-list">
-        ${achievementMilestones.scores.map(m => `
-          <li class="achieve-item">Score ${m} <span class="${data[quiz].scores.includes(m) ? 'achieve-got' : ''}">${data[quiz].scores.includes(m) ? 'Got' : ''}</span></li>
-        `).join('')}
-        ${achievementMilestones.combos.map(m => `
-          <li class="achieve-item">Combo ${m} <span class="${data[quiz].combos.includes(m) ? 'achieve-got' : ''}">${data[quiz].combos.includes(m) ? 'Got' : ''}</span></li>
-        `).join('')}
-        ${achievementMilestones.levels.map(m => `
-          <li class="achieve-item">Level ${m} <span class="${data[quiz].levels.includes(m) ? 'achieve-got' : ''}">${data[quiz].levels.includes(m) ? 'Got' : ''}</span></li>
-        `).join('')}
-      </ul>
-    </div>`;
-  });
-  if (!html) {
+  if (Object.keys(data).length === 0) {
     html = '<div style="color:#888;text-align:center;">No achievements yet.</div>';
+  } else {
+    Object.keys(data).forEach(quiz => {
+      // For easy lookup
+      const got = {
+        score: (data[quiz].scores || []),
+        combo: (data[quiz].combos || []),
+        level: (data[quiz].levels || []),
+      };
+      html += `
+        <div class="achieve-section">
+          <div class="achieve-title">${quiz}</div>
+          <div class="achieve-grid">
+            ${achievementDefinitions.map(def => {
+              const achieved = got[def.type] && got[def.type].includes(def.value);
+              const icon = achieved ? "unlocked.png" : "locked.png";
+              return `
+                <div class="achieve-icon" tabindex="0">
+                  <img src="${icon}" alt="${def.label}" />
+                  <span class="achieve-tooltip">${def.label}<br>${def.desc}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    });
   }
   panel.innerHTML = html;
 }
