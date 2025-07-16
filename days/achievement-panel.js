@@ -5,7 +5,7 @@ const achievementMilestones = {
   levels: [5, 10, 25, 50]
 };
 
-// Achievement definitions (for tooltip text)
+// Achievement definitions (for popup text)
 const achievementDefinitions = [
   // Scores
   ...achievementMilestones.scores.map(m => ({
@@ -67,13 +67,11 @@ function renderAchievementPanel() {
   const panel = document.getElementById('achievement-panel-content');
   if (!panel) return;
 
-  // Use icon grid per quiz
   let html = '';
   if (Object.keys(data).length === 0) {
     html = '<div style="color:#888;text-align:center;">No achievements yet.</div>';
   } else {
     Object.keys(data).forEach(quiz => {
-      // For easy lookup
       const got = {
         score: (data[quiz].scores || []),
         combo: (data[quiz].combos || []),
@@ -83,14 +81,13 @@ function renderAchievementPanel() {
         <div class="achieve-section">
           <div class="achieve-title">${quiz}</div>
           <div class="achieve-grid">
-            ${achievementDefinitions.map(def => {
+            ${achievementDefinitions.map((def, idx) => {
               const achieved = got[def.type] && got[def.type].includes(def.value);
               const icon = achieved ? "unlocked.png" : "locked.png";
               return `
-                <div class="achieve-icon" tabindex="0">
+                <button class="achieve-icon" data-achieve-idx="${idx}" aria-label="${def.label}">
                   <img src="${icon}" alt="${def.label}" />
-                  <span class="achieve-tooltip">${def.label}<br>${def.desc}</span>
-                </div>
+                </button>
               `;
             }).join('')}
           </div>
@@ -99,6 +96,40 @@ function renderAchievementPanel() {
     });
   }
   panel.innerHTML = html;
+
+  // Add click event for popups
+  document.querySelectorAll('.achieve-icon').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const idx = this.getAttribute('data-achieve-idx');
+      showAchievementPopup(achievementDefinitions[idx]);
+    });
+  });
+}
+
+// Simple popup function
+function showAchievementPopup(def) {
+  // Remove any existing popup
+  const existing = document.getElementById('achieve-popup');
+  if (existing) existing.remove();
+
+  const popup = document.createElement('div');
+  popup.id = 'achieve-popup';
+  popup.innerHTML = `
+    <div class="popup-inner">
+      <strong>${def.label}</strong><br>
+      <span>${def.desc}</span>
+      <button class="popup-close" aria-label="Close">Close</button>
+    </div>
+  `;
+  document.body.appendChild(popup);
+
+  // Center the popup
+  setTimeout(() => popup.classList.add('show'), 10);
+
+  popup.querySelector('.popup-close').onclick = () => popup.remove();
+  popup.onclick = e => {
+    if (e.target === popup) popup.remove();
+  };
 }
 
 // Setup panel and tab
